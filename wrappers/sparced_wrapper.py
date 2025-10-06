@@ -18,6 +18,7 @@ import logging
 import importlib
 import importlib.util
 
+import amici
 import numpy as np
 import pandas as pd
 
@@ -43,30 +44,27 @@ class WrapSPARCED(AbstractSimulator):
         super().__init__(*args, **kwargs)
 
     def load(self, *args, **kwargs):
+        # default path for testing
         self.tool.sbml_path = []
         self.tool.model = []
         self.tool.flagD = 1
-
+        # If a nested tuple is passed, unpack it
         for arg in args:
-            if isinstance(arg, str) and os.path.exists(arg):
+            if type(arg) == str and os.path.exists(arg):
+
                 _, extension = os.path.splitext(arg)
 
                 if extension == ".xml":
+
                     self.tool.sbml_path = str(pathlib.Path(arg).expanduser().resolve())
 
-                elif os.path.isdir(arg):
-                    model_path = pathlib.Path(arg).expanduser().resolve() / "RunSPARCED.py"
-                    if not model_path.exists():
-                        raise FileNotFoundError(f"No RunSPARCED.py found in {arg}")
+            if os.path.isdir(arg):
+                model_module = amici.import_model_module("SPARCED", arg)
+                #model_module = importlib.import_module(arg)
+                self.tool.model = model_module.getModel()
+                self.tool.species_initializations = self.tool.model.getInitialStates()
 
-                    spec = importlib.util.spec_from_file_location("RunSPARCED", model_path)
-                    model_module = importlib.util.module_from_spec(spec)
-                    spec.loader.exec_module(model_module)
-
-                    self.tool.model = model_module.getModel()
-                    self.tool.species_initializations = self.tool.model.getInitialStates()
-
-            elif isinstance(arg, int):
+            if type(arg) == int:
                 self.tool.flagD = arg
 
     def getStateIds(self, *args, **kwargs) -> list:
