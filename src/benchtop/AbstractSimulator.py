@@ -23,7 +23,8 @@ class AbstractSimulator(ABC):
             returns the loaded module 
 
         """
-        self.tool = self.load(*args, **kwargs)
+        self.tool = type("Tool", (), {})()  # lightweight empty object
+        self.load(*args, **kwargs)
 
     @abstractmethod
     def load(self, *args, **kwargs) -> ModuleType:
