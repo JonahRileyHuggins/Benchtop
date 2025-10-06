@@ -122,7 +122,7 @@ class WrapSPARCED(AbstractSimulator):
         """
         # Retrieve all identifiers
         species_ids = self.tool.model.getStateIds()
-        parameter_ids = self.tool.model.getParameterIds()
+        parameter_ids = self.tool.model.getFixedParameterIds()
 
         # Modify species initializations
         if component in species_ids:
@@ -135,9 +135,9 @@ class WrapSPARCED(AbstractSimulator):
         elif component in parameter_ids:
             comp_idx = parameter_ids.index(component)
             logger.info(f"Modifying parameter '{component}' (index {comp_idx}) to {value}")
-            self.tool.model.setParameters(
+            self.tool.model.setFixedParameters(
                 np.array([
-                    value if i == comp_idx else self.tool.model.getParameters()[i]
+                    value if i == comp_idx else self.tool.model.getFixedParameters()[i]
                     for i in range(len(parameter_ids))
                 ])
             )
