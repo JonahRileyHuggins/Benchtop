@@ -1,0 +1,16 @@
+parameterId	parameterScale	lowerBound	upperBound	nominalValue	estimate
+kGac1_1	lin	0.0005	0.0005	0.0005	0
+kGac2_1	lin	0.0005	0.0005	0.0005	0
+kGin1_1	lin	0.005	0.005	0.005	0
+kGin2_1	lin	0.005	0.005	0.005	0
+kTC1_1	lin	0.005	0.005	0.005	0
+kTC2_1	lin	0.005	0.005	0.005	0
+kTCd1_1	lin	0.00005	0.00005	0.00005	0
+kTCd2_1	lin	0.00005	0.00005	0.00005	0
+kTL1_1	lin	1	1	1	0
+kTL2_1	lin	1	1	1	0
+kLR1_1	lin	0.001	0.001	0.001	0
+kLR2_1	lin	0.001	0.001	0.001	0
+kLR3_1	lin	0.00005	0.00005	0.00005	0
+kLR4_1	lin	0.00005	0.00005	0.00005	0
+kLR5_1	lin	0.00005	0.00005	0.00005	0

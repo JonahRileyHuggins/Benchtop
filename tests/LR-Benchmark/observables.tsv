@@ -1,0 +1,4 @@
+observableId	observableFormula	noiseFormula
+blank	0	1
+R_gene_activity	nuc_gene_a__RECEPTOR_ + nuc_gene_i__RECEPTOR_	1
+LR-complex	cyt_prot__LIGAND__RECEPTOR_	1

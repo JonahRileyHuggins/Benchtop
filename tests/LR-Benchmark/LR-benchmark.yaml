@@ -1,0 +1,13 @@
+format_version: 1 
+parameter_file: LR Model - Parameters.tsv
+problems: 
+  - name: 'test-benchmark'
+    condition_files: 
+    - conditions.tsv
+    measurement_files:
+    - measurements.tsv
+    observable_files:
+    - observables.tsv
+    sbml_files:
+    - LR-model.xml
+    cell_count: 2
