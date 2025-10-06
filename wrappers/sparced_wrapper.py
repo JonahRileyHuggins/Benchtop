@@ -20,8 +20,11 @@ import importlib
 import numpy as np
 import pandas as pd
 
+import sys
+
+sys.path.append('../')
 from src.benchtop.AbstractSimulator import AbstractSimulator
-from modules.RunSPARCED import RunSPARCED
+from bin.modules.RunSPARCED import RunSPARCED
 
 
 
@@ -100,19 +103,47 @@ class WrapSPARCED(AbstractSimulator):
         results_df = pd.concat([dfT, dfS, dfG], axis=1)
 
         return results_df
-
     def modify(
             self, 
             component: str, 
             value: int | float
             ):
         """
-        Method for SingleCell simulator modify method
+        Modify the initial condition or parameter value in the AMICI model.
+
+        Parameters
+        ----------
+        component : str
+            Name of the species or parameter to modify.
+        value : int | float
+            New value to assign.
         """
+        # Retrieve all identifiers
+        species_ids = self.tool.model.getStateIds()
+        parameter_ids = self.tool.model.getParameterIds()
 
-        # Make a list of species and get component's index
-        list_of_species = self.getStateIds()
-        comp_idx = list_of_species.index(component)
+        # Modify species initializations
+        if component in species_ids:
+            comp_idx = species_ids.index(component)
+            logger.info(f"Modifying species '{component}' (index {comp_idx}) to {value}")
+            self.tool.species_initializations[comp_idx] = value
+            return
 
-        # get list of states and modify state[index] value
-        self.tool.species_initializations[comp_idx] = value
+        # Modify parameter values
+        elif component in parameter_ids:
+            comp_idx = parameter_ids.index(component)
+            logger.info(f"Modifying parameter '{component}' (index {comp_idx}) to {value}")
+            self.tool.model.setParameters(
+                np.array([
+                    value if i == comp_idx else self.tool.model.getParameters()[i]
+                    for i in range(len(parameter_ids))
+                ])
+            )
+            return
+
+        else:
+            raise ValueError(
+                f"Component '{component}' not found in model species or parameters.\n"
+                f"Available species: {species_ids[:5]}... ({len(species_ids)} total)\n"
+                f"Available parameters: {parameter_ids[:5]}... ({len(parameter_ids)} total)"
+            )
