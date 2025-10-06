@@ -84,7 +84,9 @@ class Experiment:
 
     def run(self,
             simulator: AbstractSimulator,
-            *args
+            *args, 
+            start: float = 0.0,
+            step: float = 30.0,
             ) -> None:
         """
         Parameters
@@ -116,8 +118,10 @@ class Experiment:
                 (
                     task, 
                     self.manager,
-                    simulator, 
-                    *args
+                    simulator,
+                    *args,
+                    start,
+                    step
                 ) 
                 for task in tasks]
             

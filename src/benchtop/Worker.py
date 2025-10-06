@@ -33,6 +33,8 @@ class Worker:
             manager: Manager,
             simulator: AbstractSimulator,
             args: tuple = (), 
+            start: float = 0.0, 
+            step: float = 30.0
         ):
         """
         simulator : AbstractSimulator
@@ -49,7 +51,7 @@ class Worker:
         self.simulator = simulator(*args)
 
         # Run individual simulation
-        self.__run_task(task)
+        self.__run_task(task, start, step)
 
     def __run_task(
             self, 
