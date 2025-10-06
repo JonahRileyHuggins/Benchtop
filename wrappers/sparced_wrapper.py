@@ -72,7 +72,7 @@ class WrapSPARCED(AbstractSimulator):
     def getStateIds(self, *args, **kwargs) -> list:
         return self.tool.model.getStateIds()
 
-    def simulate(self, stop) -> pd.DataFrame:
+    def simulate(self, start: float, stop: float, step:float) -> pd.DataFrame:
         """Primary simulation function using hybrid stochastic-deterministic method
 
         Parameters:

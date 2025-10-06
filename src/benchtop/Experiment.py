@@ -84,7 +84,7 @@ class Experiment:
 
     def run(self,
             simulator: AbstractSimulator,
-            *args,
+            *args
             ) -> None:
         """
         Parameters

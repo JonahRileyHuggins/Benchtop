@@ -51,7 +51,12 @@ class Worker:
         # Run individual simulation
         self.__run_task(task)
 
-    def __run_task(self, task: str) -> dict:
+    def __run_task(
+            self, 
+            task: str,
+            start: float = 0.0,
+            step: float = 30.0,
+            ) -> dict:
             """organized simulation method, executed by each process"""
             rank = mp.current_process().name
             if task is None:
@@ -75,10 +80,10 @@ class Worker:
             self.__setModelState(condition.keys(), condition.values.tolist())
 
             stop_time = self.__get_simulation_time(condition)
-            results_array = self.simulator.simulate(0.0, stop_time, 30.0)
+            results_array = self.simulator.simulate(start, stop_time, step)
 
             results = pd.DataFrame(results_array)
-            results['time'] = np.arange(0, stop_time, 30)
+            results['time'] = np.arange(int(start), stop_time, int(step))
 
             parcel = self.__package_results(results, condition_id, cell)
 
