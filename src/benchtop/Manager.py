@@ -1,22 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-script name: Manager.py
-Created on  08/02/2025
+Something Something...
 Author: Jonah R. Huggins
 
-Description: 
-
-Output: 
-
 """
-import sys
-
 import pandas as pd
 
-sys.path.append('../')
-import Experiment.utils as utils
-from Experiment.ResultsCacher import ResultCache
+import src.benchtop.utils as utils
+from src.benchtop.ResultsCacher import ResultCache
 
 
 class Manager:

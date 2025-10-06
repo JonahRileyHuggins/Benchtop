@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-script name: Observable_calc.py
-Created on Fri April 24 18:00:00 2024
+Calculates and downsamples observable formulas from simulation results.
+
 Author: Jonah R. Huggins
 
-Description: Calculates and downsamples observable formulas from simulation results.
-
+Description: 
 """
 # -----------------------Package Import & Defined Arguements-------------------#
 import re

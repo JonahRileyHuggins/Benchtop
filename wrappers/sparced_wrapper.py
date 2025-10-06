@@ -20,7 +20,7 @@ import importlib
 import numpy as np
 import pandas as pd
 
-from Experiment.AbstractSimulator import AbstractSimulator
+from src.benchtop.AbstractSimulator import AbstractSimulator
 from modules.RunSPARCED import RunSPARCED
 
 

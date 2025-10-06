@@ -13,9 +13,6 @@ import os, sys
 from pathlib import Path
 import textwrap
 
-def get_project_root() -> Path:
-    return os.path.join(Path.home(), ".local", "share", "SingleCell")
-
 
 @staticmethod
 def identifier_generator():

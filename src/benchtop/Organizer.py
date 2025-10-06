@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-script name: Organizer.py
-Created on Fri Jan. 10th 12:00:00 2024
+Curates and handles the organization of tasks for the experiment processes
+
 Author: Jonah R. Huggins
-
-Description: Curates and handles the organization of tasks for the experiment processes
-
 """
 # -----------------------Package Import & Defined Arguements-------------------#
 import os

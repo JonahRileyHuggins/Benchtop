@@ -1,11 +1,11 @@
 #!/bin/env python3 
 """
-author: Jonah R. Huggins
-Created On: 2025-08-22
-
-description: Abstract parent class for specifying simulator modules. 
+Abstract parent class for specifying simulator modules. 
 Create a child class that has the bare minimum of each method described 
 within the Parent.
+
+author: Jonah R. Huggins
+
 """
 from types import ModuleType
 from abc import ABC, abstractmethod

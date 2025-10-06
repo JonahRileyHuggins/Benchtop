@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python
 """
-Created on Thurs. 05/16/2024 10:45:00 - JRH
-
 Script to automate model-data comparison and simulation complex experiments.
 
 Provide a path to the model directory and the script will run all experiments. 
 
+author: Jonah R. Huggins
 """
 
 # -----------------------Package Import & Defined Arguements-------------------#

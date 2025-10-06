@@ -1,10 +1,8 @@
 #!/bin/env python3 
 """
-filename: Experiment.py
-author: Jonah R. Huggins
-Created On: 2025-07-10
+Primary class object of an experiment
 
-description: Primary class object of an experiment
+author: Jonah R. Huggins
 """
 # =========================================
 # ============ Package Import ============
@@ -16,13 +14,13 @@ import pickle as pkl
 from datetime import date
 import multiprocessing as mp
 
-from Experiment.Worker import Worker
-from Experiment.Manager import Manager
-from Experiment.Organizer import Organizer
-import Experiment.ObservableCalculator as obs
-from Experiment.ResultsCacher import ResultCache
-from Experiment.file_loader import FileLoader
-from Experiment.AbstractSimulator import AbstractSimulator
+from src.benchtop.Worker import Worker
+from src.benchtop.Manager import Manager
+from src.benchtop.Organizer import Organizer
+import src.benchtop.ObservableCalculator as obs
+from src.benchtop.ResultsCacher import ResultCache
+from src.benchtop.file_loader import FileLoader
+from src.benchtop.AbstractSimulator import AbstractSimulator
 
 
 logging.basicConfig(

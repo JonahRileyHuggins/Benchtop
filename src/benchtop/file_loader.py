@@ -1,10 +1,10 @@
 #!/bin/env python3 
 """
-filename: file_loader.py
-author: Jonah R. Huggins
-Created On: 2025-04-18
+Generic class for loading files based on extension.
 
-description: loads a file. 
+author: Jonah R. Huggins
+
+
 """
 
 import os

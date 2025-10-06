@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-script name: Worker.py
-Created on Fri Jan. 10th 12:00:00 2024
+Individual worker method for simulated experiments.
+
 Author: Jonah R. Huggins
 
-Description: Individual worker method for simulated experiments.
-
+Description: 
 """
 # -----------------------Package Import & Defined Arguements-------------------#
 import gc
@@ -16,9 +15,9 @@ import multiprocessing as mp
 import numpy as np
 import pandas as pd
 
-from Experiment.Manager import Manager
-from Experiment.ResultsCacher import ResultCache
-from Experiment.AbstractSimulator import AbstractSimulator
+from src.benchtop.Manager import Manager
+from src.benchtop.ResultsCacher import ResultCache
+from src.benchtop.AbstractSimulator import AbstractSimulator
 
 logging.basicConfig(
     level=logging.INFO, # Overriden if Verbose Arg. True

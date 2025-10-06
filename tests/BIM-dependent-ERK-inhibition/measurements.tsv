@@ -1,0 +1,6 @@
+observableId	preequilibrationConditionId	simulationConditionId	measurement	time
+blank		serum_starve	None	86400
+cPARP_total	serum_starve	BAD_total	None	172800
+cPARP_total	serum_starve	BIM_total	None	172800
+PARP_total	serum_starve	BAD_total	None	172800
+PARP_total	serum_starve	BIM_total	None	172800
