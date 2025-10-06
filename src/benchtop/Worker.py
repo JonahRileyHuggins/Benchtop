@@ -150,8 +150,8 @@ class Worker:
 
                 self.simulator.modify(name, state)
 
-            except:
-                ValueError
+            except ValueError as e:
+                logger.error(f"ValueError while modifying {name}: {e}")
                 
         logger.debug("Updated model state")
 
