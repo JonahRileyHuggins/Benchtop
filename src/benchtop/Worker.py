@@ -145,6 +145,7 @@ class Worker:
         """Set model state with list of floats"""
 
         for name, state in zip(names, states):
+            logger.debug(f"Modifying variable {name} with value {state}")
             try:
 
                 self.simulator.modify(name, state)

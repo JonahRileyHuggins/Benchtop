@@ -45,7 +45,7 @@ class WrapSPARCED(AbstractSimulator):
 
     def load(self, *args, **kwargs):
         # default path for testing
-        self.tool.sbml_path = []
+        self.tool.sbml_file = []
         self.tool.model = []
         self.tool.flagD = 1
         # If a nested tuple is passed, unpack it
@@ -56,7 +56,7 @@ class WrapSPARCED(AbstractSimulator):
 
                 if extension == ".xml":
 
-                    self.tool.sbml_path = str(pathlib.Path(arg).expanduser().resolve())
+                    self.tool.sbml_file = str(pathlib.Path(arg).expanduser().resolve())
 
             if os.path.isdir(arg):
                 model_module = amici.import_model_module("SPARCED", arg)
@@ -79,7 +79,7 @@ class WrapSPARCED(AbstractSimulator):
             - results_dataframe (pd.DataFrame): finalized results of simulation. 
         """
 
-        solver = self.model.getSolver() # Create solver instance
+        solver = self.tool.model.getSolver() # Create solver instance
         solver.setMaxSteps = 1e10
 
         xoutS_all, xoutG_all, tout_all = RunSPARCED(
