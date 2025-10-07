@@ -114,6 +114,8 @@ class Experiment:
                 round_i=round_i
             )
 
+            logger.debug(f"Tasks for round: {tasks}")
+
             worker_args = [
                 (
                     task, 

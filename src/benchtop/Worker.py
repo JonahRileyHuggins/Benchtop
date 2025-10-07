@@ -72,6 +72,7 @@ class Worker:
             )
 
             logger.info(f"{rank} running {condition_id} for replicate {cell}")
+            logger.debug(f"Conditions for {condition_id} are:  {condition.keys()}")
 
             state_ids = self.simulator.getStateIds()
 
@@ -144,7 +145,13 @@ class Worker:
     def __setModelState(self, names: list, states: list) -> None:
         """Set model state with list of floats"""
 
+        
+        # Drop unwanted metadata keys
+        blacklist_names = ["conditionId", "conditionName"]
+
         for name, state in zip(names, states):
+            if name in blacklist_names:
+                continue
             logger.debug(f"Modifying variable {name} with value {state}")
             try:
 

@@ -62,7 +62,7 @@ class WrapSPARCED(AbstractSimulator):
                 model_module = amici.import_model_module("SPARCED", arg)
                 #model_module = importlib.import_module(arg)
                 self.tool.model = model_module.getModel()
-                self.tool.species_initializations = self.tool.model.getInitialStates()
+                self.tool.species_initializations = [value for value in self.tool.model.getInitialStates()]
 
             if type(arg) == int:
                 self.tool.flagD = arg
@@ -81,6 +81,9 @@ class WrapSPARCED(AbstractSimulator):
 
         solver = self.tool.model.getSolver() # Create solver instance
         solver.setMaxSteps = 1e10
+
+        # Iterative time step
+        self.tool.model.setTimepoints(np.linspace(0,step,2))
 
         xoutS_all, xoutG_all, tout_all = RunSPARCED(
             self.tool.flagD,
