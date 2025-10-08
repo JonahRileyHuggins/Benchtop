@@ -15,7 +15,7 @@ import multiprocessing as mp
 import numpy as np
 import pandas as pd
 
-from benchtop.Record import Record
+from src.benchtop.Record import Record
 from src.benchtop.ResultsCacher import ResultCache
 from src.benchtop.AbstractSimulator import AbstractSimulator
 
@@ -53,6 +53,10 @@ class Worker:
         # Run individual simulation
         self.__run_task(task, start, step)
 
+        # clean up simulator reference before returning
+        self.simulator = None
+        gc.collect()
+
     def __run_task(
             self, 
             task: str,
@@ -86,17 +90,13 @@ class Worker:
             results_array = self.simulator.simulate(start, stop_time, step)
 
             results = pd.DataFrame(results_array)
-            results['time'] = np.arange(int(start), stop_time, int(step))
+            results['time'] = np.arange(int(start), stop_time+step, int(step))
 
             parcel = self.__package_results(results, condition_id, cell)
 
             logger.info(f"{rank} finished {condition_id} for cell {cell}")
 
             self.__cache_results(parcel)
-
-            # Reset rank internal model after simulation and take out the garbage
-            self.simulator = None
-            gc.collect()
 
             logger.info(f"Rank {rank} has completed {condition_id} for process {cell}")
 

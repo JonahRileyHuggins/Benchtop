@@ -13,10 +13,9 @@ import argparse
 import pickle as pkl
 from datetime import date
 import multiprocessing as mp
-from collections import deque
 
 from src.benchtop.Worker import Worker
-from benchtop.Record import Record
+from src.benchtop.Record import Record
 from src.benchtop.Organizer import Organizer
 import src.benchtop.ObservableCalculator as obs
 from src.benchtop.file_loader import FileLoader
