@@ -155,11 +155,11 @@ class ObservableCalculator:
         # Check if formula is in the null-like set
         if formula in acceptable_nulls or (
             isinstance(formula, float) and math.isnan(formula)
-        ):
+            ):
             return None
         
         species = self._get_valid_species(formula)
-
+        
         for variable in species:
             # At each iteration, the formula updates with each species array
             formula = self.swap_species_for_array(
@@ -191,12 +191,7 @@ class ObservableCalculator:
             raise TypeError("Input observable_formula must be a string.")
         
         # Regex for PEtab-compliant species identifiers
-        species_regex = re.compile(
-            r"^[a-z]{3}_(prot_|lipid_|mrna_|gene_|mixed_|imp_)(([a-zA-Z]+)_)*(((_[a-z]{1}[A-Z]?[0-9]*)+)*(_[a-zA-Z0-9]+_([0-9_]*)))+$"
-            )
-        # Split the formula by mathematical operators and filter valid species
-        components = re.split(r"[+\-*/() ]", formula)
-        valid_species = [c for c in components if re.match(species_regex, c)]
+        valid_species = re.findall(r"[A-Za-z_]\w*", formula)
 
         if not valid_species:
             raise ValueError("No valid species found in the observable formula.")
