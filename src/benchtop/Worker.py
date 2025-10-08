@@ -16,7 +16,6 @@ import numpy as np
 import pandas as pd
 
 from src.benchtop.Record import Record
-from src.benchtop.ResultsCacher import ResultCache
 from src.benchtop.AbstractSimulator import AbstractSimulator
 
 logging.basicConfig(
@@ -24,6 +23,19 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
+def worker_method(
+        task: str, 
+        record: Record,
+        simulator: AbstractSimulator,
+        args: tuple = (), 
+        start: float = 0.0, 
+        step: float = 30.0
+            ):
+    """Child process method for avoiding Multiprocessing from serializing Worker object"""
+    # Instantiate and run inside the child process
+    Worker(task, record, simulator, args, start, step)
+    return None  # avoid returning the Worker itself
 
 class Worker:
 

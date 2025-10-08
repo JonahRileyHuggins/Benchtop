@@ -14,7 +14,7 @@ import pickle as pkl
 from datetime import date
 import multiprocessing as mp
 
-from src.benchtop.Worker import Worker
+from src.benchtop.Worker import worker_method
 from src.benchtop.Record import Record
 from src.benchtop.Organizer import Organizer
 import src.benchtop.ObservableCalculator as obs
@@ -133,7 +133,7 @@ class Experiment:
             
             # split workload across processes:
             with mp.Pool(processes=self.size) as pool:
-                pool.starmap(Worker, worker_args)
+                pool.starmap(worker_method, worker_args)
                         
         # Have root store final results of all sims and cleanup cache
         self.__store_final_results()
