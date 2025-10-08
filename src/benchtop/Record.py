@@ -23,6 +23,7 @@ class Record:
 
         self.problem = problem
 
+        # --- initial dictionary, replaced if cached index present ---
         self.results_dict = self.__results_dictionary()
 
         self.cache = ResultCache(
@@ -30,6 +31,9 @@ class Record:
             cache_dir=cache_dir, 
             load_index=load_index
             )
+        
+        # --- restores results dictionary if cache index present ---
+        self.results_dict = self.cache.results_dict
     
     def __results_dictionary(self) -> dict:
         """Create an empty dictionary for storing results

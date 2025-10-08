@@ -11,10 +11,10 @@ class ResultCache:
 
     def __init__(
             self, 
-            results_dict: dict[str, Any], 
+            results_dict: dict[str, Any] | None = None, 
             cache_dir: str = './.cache', 
             load_index: bool = False
-            ) -> None:
+        ) -> None:
         self.cache_dir = cache_dir
 
         os.makedirs(self.cache_dir, exist_ok=True)
@@ -22,14 +22,29 @@ class ResultCache:
         self.cache_index_path = os.path.join(self.cache_dir, "cache_index.json")
         
         if not load_index:
-            
-            # Convert job identifiers (keys) into dict entries with default value 0
-            for key in results_dict.keys():
-                results_dict[key]['complete'] = False
+            if results_dict is None:
+                raise ValueError("results_dict must be provided when load_index=False")
 
-            # Write to cache file (overwrite if it already exists)
-            with open(self.cache_index_path, 'w') as file:
-                json.dump(results_dict, file, indent=2)
+            # Initialize new cache index with 'complete' flags
+            for key, value in results_dict.items():
+                value['complete'] = False
+
+            self.results_dict = results_dict
+
+            # Write new cache index
+            with open(self.cache_index_path, 'w') as f:
+                json.dump(self.results_dict, f, indent=2)
+
+        else:
+            # Load existing cache index
+            if not os.path.exists(self.cache_index_path):
+                raise FileNotFoundError(
+                    f"No cache index found at {self.cache_index_path}. "
+                    "Run once with load_index=False to create it."
+                )
+
+            with open(self.cache_index_path, 'r') as f:
+                self.results_dict = json.load(f)
 
     def _key_to_path(self, key: str) -> str:
         """Convert a dictionary key to a safe file path"""
