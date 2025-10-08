@@ -24,7 +24,7 @@ class ObservableCalculator:
 
     def __init__(self, parent):
 
-        self.results_dict = parent.manager.results_dict
+        self.results_dict = parent.record.results_dict
 
         self.observable_df = parent.loader.problems[0].observable_files[0]
         
