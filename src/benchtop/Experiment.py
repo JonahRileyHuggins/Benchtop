@@ -13,12 +13,12 @@ import argparse
 import pickle as pkl
 from datetime import date
 import multiprocessing as mp
+from collections import deque
 
 from src.benchtop.Worker import Worker
-from src.benchtop.Manager import Manager
+from benchtop.Record import Record
 from src.benchtop.Organizer import Organizer
 import src.benchtop.ObservableCalculator as obs
-from src.benchtop.ResultsCacher import ResultCache
 from src.benchtop.file_loader import FileLoader
 from src.benchtop.AbstractSimulator import AbstractSimulator
 
@@ -34,7 +34,9 @@ class Experiment:
 
     def __init__(self, 
                  petab_yaml: os.PathLike | str, 
-                 cores: int = os.cpu_count(), 
+                 cores: int = os.cpu_count(),
+                 cache_dir: str = './.cache',
+                 load_index: bool = False,
                  verbose = False
                  ) -> None:
         """
@@ -50,7 +52,6 @@ class Experiment:
 
         """
 
-        self.cache = ResultCache()
         self.org = Organizer(cores)
         self.size = cores
         
@@ -75,11 +76,15 @@ class Experiment:
 
         logger.info("Loading Experiment %s details from %s", self.name, self.petab_yaml)
 
-        # SingleCell() constructor is variadic, supply multiple SBML files!
+        # recieves one or more SBML files
         self.sbml_list = self.__sbml_getter()
 
         # Loads jobs directory with results_dict class member
-        self.manager = Manager(self.loader.problems[0])
+        self.record = Record(
+            problem=self.loader.problems[0],
+            cache_dir=cache_dir,
+            load_index=load_index
+            )
 
 
     def run(self,
@@ -101,7 +106,7 @@ class Experiment:
 
         logger.debug(f"Starting in-silico experiment across {self.size} cores.")
 
-        num_rounds, job_directory = self.org.task_organization(
+        num_rounds, job_index = self.org.task_organization(
             self.loader.problems[0].measurement_files[0],
             self.cell_count
         )
@@ -110,7 +115,7 @@ class Experiment:
 
             # Get list of tasks for current round:
             tasks = self.org.task_assignment(
-                rank_jobs_directory=job_directory,
+                rank_jobs_directory=job_index,
                 round_i=round_i
             )
 
@@ -119,7 +124,7 @@ class Experiment:
             worker_args = [
                 (
                     task, 
-                    self.manager,
+                    self.record,
                     simulator,
                     *args,
                     start,
@@ -128,7 +133,7 @@ class Experiment:
                 for task in tasks]
             
             # split workload across processes:
-            with mp.Pool(processes=os.cpu_count()) as pool:
+            with mp.Pool(processes=self.size) as pool:
                 pool.starmap(Worker, worker_args)
                         
         # Have root store final results of all sims and cleanup cache
@@ -148,16 +153,16 @@ class Experiment:
     def __store_final_results(self) -> None:
         """Stores all simulation results stored in cache into Rank 0 self.results_dict object"""
 
-        for key in self.manager.results_dict.keys(): 
+        for key in self.record.results_dict.keys(): 
             
-            condition_id = self.manager.results_dict[key]['conditionId']
-            cell = self.manager.results_dict[key]['cell']
+            condition_id = self.record.results_dict[key]['conditionId']
+            cell = self.record.results_dict[key]['cell']
 
-            df = self.manager.results_lookup(condition_id, cell)
+            df = self.record.results_lookup(condition_id, cell)
 
             for column in df.columns:
 
-                self.manager.results_dict[key][column] = df[column]
+                self.record.results_dict[key][column] = df[column]
                 
         return # saves results to results_dict class member
 
@@ -188,9 +193,9 @@ class Experiment:
             results_path = os.path.join(results_directory, f"{self.name}.pkl")
 
         with open(results_path, "wb") as f:
-            pkl.dump(self.manager.results_dict, f)
+            pkl.dump(self.record.results_dict, f)
 
-        self.cache.delete_cache()
+        self.record.cache.delete_cache()
 
 
     def observable_calculation(self, *args) -> None:
@@ -200,13 +205,96 @@ class Experiment:
         output:
             returns the results of the SPARCED model unit test simulation
         """
-        self.manager.results_dict = obs.ObservableCalculator(self).run()
+        self.record.results_dict = obs.ObservableCalculator(self).run()
 
         self.save_results(args)
 
         return # Proceeds to next command provided in launchers.py
 
+    def resume(
+        self,
+        simulator: AbstractSimulator,
+        *args, 
+        start: float = 0.0,
+        step: float = 30.0,
+    ) -> None:
+        """Starts Experiment from last completed simulation setting"""
+        
+        cache_index = self.record.cache.read_cache_index()
 
+        # --- 1. Identify incomplete jobs ---
+        incomplete = [
+            f"{self.record.results_dict[key]['conditionId']}+{self.record.results_dict[key]['cell']}"
+            for key in cache_index.keys()
+            if not cache_index[key]['complete']
+        ]
+
+        # --- 2. Find all pre-simulations (unique topo order) ---
+        topo_sorted = self.org.topologic_sort(
+            measurements_df=self.loader.problems[0].measurement_files[0]
+        )
+
+        # --- 3. Retrieve all simulations + cell replicates ---
+        total_tasks = self.org.total_tasks(
+            tasks=topo_sorted,
+            cell_count=self.cell_count
+        )
+
+        # --- 4. Filter total_tasks to only include incomplete ones ---
+        incomplete_set = set(incomplete)
+        total_tasks = [task for task in total_tasks if task in incomplete_set]
+
+        # --- 5. Guard clause: if nothing to resume ---
+        if not total_tasks:
+            logger.info(f"No incomplete jobs found for experiment '{self.name}'. Nothing to resume.")
+            return
+
+        # --- 6. Handle zero-order dependency logic ---
+        delayed_tasks = self.org.delay_secondary_conditions(
+            measurements_df=self.loader.problems[0].measurement_files[0],
+            task_list=total_tasks,
+            cell_count=self.cell_count
+        )
+
+        logger.info(f"Resuming {len(total_tasks)} jobs for experiment '{self.name}'...")
+
+        # --- 7. Rebuild task index for parallel scheduling ---
+        num_rounds = -(-len(delayed_tasks) // self.size)  # Ceiling division
+
+        for round_idx in range(num_rounds):
+            tasks = []
+            for _ in range(self.size):
+                if delayed_tasks:
+                    tasks.append(delayed_tasks.popleft())
+                else:
+                    tasks.append(None)
+
+            logger.debug(f"Tasks for round {round_idx + 1}/{num_rounds}: {tasks}")
+
+            worker_args = [
+                (
+                    task, 
+                    self.record,
+                    simulator,
+                    *args,
+                    start,
+                    step
+                ) 
+                for task in tasks
+            ]
+
+            # --- 8. Parallel execution ---
+            with mp.Pool(processes=self.size) as pool:
+                pool.starmap(Worker, worker_args)
+
+            logger.debug(f"Completed round {round_idx + 1}/{num_rounds}")
+
+        # --- 9. Store final results and cleanup ---
+        self.__store_final_results()
+
+                    
+
+        
 
 if __name__ == '__main__':
 

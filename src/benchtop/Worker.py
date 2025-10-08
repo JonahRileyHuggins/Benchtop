@@ -15,7 +15,7 @@ import multiprocessing as mp
 import numpy as np
 import pandas as pd
 
-from src.benchtop.Manager import Manager
+from benchtop.Record import Record
 from src.benchtop.ResultsCacher import ResultCache
 from src.benchtop.AbstractSimulator import AbstractSimulator
 
@@ -30,7 +30,7 @@ class Worker:
     def __init__(
             self,
             task: str, 
-            manager: Manager,
+            record: Record,
             simulator: AbstractSimulator,
             args: tuple = (), 
             start: float = 0.0, 
@@ -45,7 +45,7 @@ class Worker:
             Extra arguments to pass to function.
         """
 
-        self.manager = manager
+        self.record = record
 
         # Store an instance of the simulator in worker class
         self.simulator = simulator(*args)
@@ -66,9 +66,9 @@ class Worker:
 
                 return # No need to save anything if no simulation task
 
-            condition, cell, condition_id = self.manager.condition_cell_id(
+            condition, cell, condition_id = self.record.condition_cell_id(
                 rank_task=task,
-                conditions_df=self.manager.problem.condition_files[0]
+                conditions_df=self.record.problem.condition_files[0]
             )
 
             logger.info(f"{rank} running {condition_id} for replicate {cell}")
@@ -111,7 +111,7 @@ class Worker:
         """
     
         # For now, only supporting one problem per file
-        measurement_df = self.manager.problem.measurement_files[0]
+        measurement_df = self.record.problem.measurement_files[0]
         precondition_results = []
 
         if 'preequilibrationConditionId' in measurement_df.columns:
@@ -131,7 +131,7 @@ class Worker:
                         f"for condition {condition_id}"
                     ))
 
-                    precondition_df = self.manager.results_lookup(precondition_id, cell)
+                    precondition_df = self.record.results_lookup(precondition_id, cell)
                     
                     if precondition_df is not None:
                         if "time" in precondition_df.columns: 
@@ -170,7 +170,7 @@ class Worker:
         Returns the simulation time for a condition. Raises an error if time is undefined.
         """
         #Only supporting one problem per config file 
-        measurement_df = self.manager.problem.measurement_files[0]
+        measurement_df = self.record.problem.measurement_files[0]
         matching_times = measurement_df.loc[
             measurement_df["simulationConditionId"].isin(condition), "time"
         ]
@@ -192,14 +192,14 @@ class Worker:
         cell = parcel["cell"]
         results = parcel['results']
 
-        for key in self.manager.results_dict.keys():
+        for key in self.record.results_dict.keys():
 
-            if self.manager.results_dict[key]['conditionId'] == condition_id \
-                and self.manager.results_dict[key]['cell'] == cell:
+            if self.record.results_dict[key]['conditionId'] == condition_id \
+                and self.record.results_dict[key]['cell'] == cell:
 
-                # Save results
-                cache = ResultCache()
-                cache.save(key=key, df=results)
+                # Save results to temporary cache directory
+                self.record.cache.save(key=key, df=results)
+                self.record.cache.update_cache_index(key=key, status=True)
 
         return # Saves individual simulation data in cache directory
 

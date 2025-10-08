@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Something Something...
+Class object for handling results. 
+
 Author: Jonah R. Huggins
 
 """
@@ -11,15 +12,24 @@ import src.benchtop.utils as utils
 from src.benchtop.ResultsCacher import ResultCache
 
 
-class Manager:
-    """Manages results dictionary access across processes."""
-    def __init__(self, problem: dict) -> None:
+class Record:
+    """Records results dictionary access across processes."""
+    def __init__(
+            self, 
+            problem: dict,
+            cache_dir: str = './.cache', 
+            load_index: bool = False
+            ) -> None:
 
         self.problem = problem
 
-        self.cache = ResultCache()
-
         self.results_dict = self.__results_dictionary()
+
+        self.cache = ResultCache(
+            results_dict = self.results_dict,
+            cache_dir=cache_dir, 
+            load_index=load_index
+            )
     
     def __results_dictionary(self) -> dict:
         """Create an empty dictionary for storing results

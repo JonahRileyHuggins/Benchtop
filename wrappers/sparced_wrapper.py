@@ -87,14 +87,14 @@ class WrapSPARCED(AbstractSimulator):
 
         xoutS_all, xoutG_all, tout_all = RunSPARCED(
             self.tool.flagD,
-            stop,
+            stop / 3600,
             self.tool.species_initializations,
             [],
             self.tool.sbml_file,
             self.tool.model
             )
         
-        columnsS = [ele for ele in self.toolmodel.getStateIds()]
+        columnsS = [ele for ele in self.tool.model.getStateIds()]
         columnsG = [x for n, x in enumerate(columnsS) if x.startswith('m_')]
         resa = [sub.replace('m_', 'ag_') for sub in columnsG]
         resi = [sub.replace('m_', 'ig_') for sub in columnsG]
