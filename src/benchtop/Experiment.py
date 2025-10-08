@@ -284,7 +284,7 @@ class Experiment:
 
             # --- 8. Parallel execution ---
             with mp.Pool(processes=self.size) as pool:
-                pool.starmap(Worker, worker_args)
+                pool.starmap(worker_method, worker_args)
 
             logger.debug(f"Completed round {round_idx + 1}/{num_rounds}")
 

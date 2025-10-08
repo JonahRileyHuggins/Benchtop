@@ -26,6 +26,8 @@ class ObservableCalculator:
 
         self.results_dict = parent.record.results_dict
 
+        self.cache = parent.record.cache
+
         self.observable_df = parent.loader.problems[0].observable_files[0]
         
         self.measurement_df = parent.loader.problems[0].measurement_files[0]
@@ -79,21 +81,30 @@ class ObservableCalculator:
 
             matched_formulas = self._get_entry_formulas(conditionId)
 
-            #  each individual observable results are iterated through.
+            # --- reduce I/O operations by loading per entry ---
+            dataset = self.cache.load(entry)
+
+            # -- iterative process for downsampling to observable-only data ---
             for observable_key, formula in matched_formulas.items():
 
                 self.observable_results[entry][observable_key] = {}
 
                 group = self.data_groups.get_group((conditionId, observable_key))
 
-                # Experimental data is added to the dictionary: 
+                # --- PEtab measurements file defines experimental data ---
                 self.observable_results[entry][observable_key]['experiment'] = self._get_experimental_data(group)
 
-                self.observable_results[entry][observable_key]['simulation'] = self._calculate_formula(entry, formula, 
-                                                                                                       group)
+                self.observable_results[entry][observable_key]['simulation'] = self._calculate_formula(
+                    dataset, 
+                    formula, 
+                    group
+                    )
 
-                # Timepoints are reduced to bare minimum if applicable
-                self.observable_results[entry][observable_key]['time'] = self._downsample_timepoints(entry, group)
+                # --- Timepoints are reduced to bare minimum if applicable ---
+                self.observable_results[entry][observable_key]['time'] = self._downsample_timepoints(
+                    dataset, 
+                    group
+                    )
 
         return self.observable_results
 
@@ -133,7 +144,7 @@ class ObservableCalculator:
         
         return np.array(group['measurement'])
 
-    def _calculate_formula(self, entry: Hashable, formula: str, 
+    def _calculate_formula(self, dataset: pd.DataFrame, formula: str, 
                            group: pd.core.groupby.generic.DataFrameGroupBy):
         """Takes a formula string and returns the results of the intended mathematical
         expression."""
@@ -148,16 +159,16 @@ class ObservableCalculator:
             return None
         
         species = self._get_valid_species(formula)
-        
+
         for variable in species:
             # At each iteration, the formula updates with each species array
             formula = self.swap_species_for_array(
-                entry, variable, formula
+                dataset, variable, formula
             )
 
         formula_answer = eval(formula)
 
-        formula_answer = self._downsample_results(formula_answer, entry, group)
+        formula_answer = self._downsample_results(formula_answer, dataset, group)
 
         return formula_answer
 
@@ -192,13 +203,17 @@ class ObservableCalculator:
 
         return valid_species
 
-    def swap_species_for_array(self, dict_entry: str, species_i: str, 
-                            observable_formula: str) -> str:
+    def swap_species_for_array(
+            self, 
+            dataset: pd.DataFrame, 
+            species_i: str, 
+            observable_formula: str
+            ) -> str:
         """
         Takes a species identifier and returns the corresponding array from the results_dict.
 
         Parameters:
-        - dict_entry (str): The identifier for a particular simulation result for a single condition.
+        - dataset (pd.DataFrame): current experiment simulation loaded
         - species_i (str): The species identifier.
         - observable_formula (str): The formula containing species and mathematical expressions.
 
@@ -211,18 +226,16 @@ class ObservableCalculator:
         """
         try:
             # Validate inputs
-            if not isinstance(dict_entry, str):
-                raise TypeError("The dict_entry must be a string.")
             if not isinstance(species_i, str):
                 raise TypeError("The species_i must be a string.")
             if not isinstance(observable_formula, str):
                 raise TypeError("The observable_formula must be a string.")
 
-            # Retrieve the replacement value from the results dictionary
-            replacement_value = self.results_dict.get(dict_entry, {}).get(species_i)
+            # Retrieve species-specific results from current entry
+            replacement_value = dataset[species_i]
 
             if replacement_value is None:
-                raise KeyError(f"Species '{species_i}' not found in results_dict for entry '{dict_entry}'.")
+                raise KeyError(f"Species '{species_i}' not found in dataset.")
 
             # Convert to NumPy array
             if isinstance(replacement_value, pd.Series):
@@ -245,14 +258,14 @@ class ObservableCalculator:
             raise
 
     def _downsample_results(self, observable_answer: np.array, 
-                            entry: Hashable, 
+                            dataset: pd.DataFrame, 
                             group: pd.core.groupby.generic.DataFrameGroupBy
                             ) -> np.array:
         """Reduce the data to only the timepoints in the experimental data.
 
         Parameters:
         - observable_answer (np.array): The observable values from the simulation.
-        - entry (Hashable): dictionary entry identifier for current iteration
+        - dataset (pd.DataFrame): current experiment simulation loaded
         - group (pd.DataFrameGroupBy): Grouped measurement dataframe.
 
         Returns:
@@ -265,7 +278,7 @@ class ObservableCalculator:
 
         exp_time = self.measurement_df["time"].unique()
 
-        time = self.results_dict[entry]['time']
+        time = dataset['time']
 
         sim_equivalent_indicies = self._get_exp_time_indicies(exp_time, time)
 
@@ -287,19 +300,22 @@ class ObservableCalculator:
 
         return sim_timepoint_indicies
 
-    def _downsample_timepoints(self, entry: Hashable,
-                                group: pd.core.groupby.generic.DataFrameGroupBy) -> np.array:
+    def _downsample_timepoints(
+            self, 
+            dataset: pd.DataFrame,
+            group: pd.core.groupby.generic.DataFrameGroupBy
+            ) -> np.array:
         """Reduce the number of timepoints in the simulation results. to match
             the number of timepoints in the experimental data.
 
         Parameters:
-        - entry (Hashable): dictionary entry identifier for current iteration
+        - dataset (pd.DataFrame): current experiment simulation loaded
 
         Returns:
         - time (np.array): The reduced timepoints.
         """
 
-        time = self.results_dict[entry]['time']
+        time = dataset['time']
 
         if group["measurement"].isna().all():
             return time
