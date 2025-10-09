@@ -15,8 +15,6 @@ Output:
 import os
 import pathlib
 import logging
-import importlib
-import importlib.util
 
 import amici
 import numpy as np
@@ -86,12 +84,12 @@ class WrapSPARCED(AbstractSimulator):
         self.tool.model.setTimepoints(np.linspace(0,step,2))
 
         xoutS_all, xoutG_all, tout_all = RunSPARCED(
-            self.tool.flagD,
-            stop / 3600,
-            self.tool.species_initializations,
-            [],
-            self.tool.sbml_file,
-            self.tool.model
+            flagD = self.tool.flagD,
+            th = stop / 3600,
+            spdata = self.tool.species_initializations,
+            genedata = [],
+            sbml_file = self.tool.sbml_file,
+            model = self.tool.model
             )
         
         columnsS = [ele for ele in self.tool.model.getStateIds()]
@@ -130,20 +128,20 @@ class WrapSPARCED(AbstractSimulator):
         # Modify species initializations
         if component in species_ids:
             comp_idx = species_ids.index(component)
-            logger.info(f"Modifying species '{component}' (index {comp_idx}) to {value}")
             self.tool.species_initializations[comp_idx] = value
+            logger.info(f"Modified species '{component}' (index {comp_idx}) to {value}")
             return
 
         # Modify parameter values
         elif component in parameter_ids:
             comp_idx = parameter_ids.index(component)
-            logger.info(f"Modifying parameter '{component}' (index {comp_idx}) to {value}")
             self.tool.model.setFixedParameters(
                 np.array([
                     value if i == comp_idx else self.tool.model.getFixedParameters()[i]
                     for i in range(len(parameter_ids))
                 ])
             )
+            logger.info(f"Modified parameter '{component}' (index {comp_idx}) to {value}")
             return
 
         else:

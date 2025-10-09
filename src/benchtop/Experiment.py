@@ -1,6 +1,9 @@
 #!/bin/env python3 
 """
-Primary class object of an experiment
+Primary class object of an experiment. Runs via embarassingly parallel
+simulation, where each process recieves an individual task in round-robin 
+agorithm. Results are dumped into hidden cache directory and serialized
+as pickle files. Job ordering is organized via Kahn's algorithm. 
 
 author: Jonah R. Huggins
 """
@@ -149,7 +152,7 @@ class Experiment:
 
         return sbml_file_list
 
-    def __store_final_results(self) -> None:
+    def _store_final_results(self) -> None:
         """Stores all simulation results stored in cache into Rank 0 self.results_dict object"""
 
         for key in self.record.results_dict.keys(): 

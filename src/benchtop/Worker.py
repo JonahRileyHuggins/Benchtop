@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Individual worker method for simulated experiments.
+Individual worker method for simulated experiments. 
 
 Author: Jonah R. Huggins
 
