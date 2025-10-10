@@ -139,7 +139,7 @@ class Experiment:
                 pool.starmap(worker_method, worker_args)
                         
         # Have root store final results of all sims and cleanup cache
-        self.__store_final_results()
+        self._store_final_results()
 
     def __sbml_getter(self) -> list:
         """Retrieves all sbml files defined in PEtab configuration file"""
@@ -292,7 +292,7 @@ class Experiment:
             logger.debug(f"Completed round {round_idx + 1}/{num_rounds}")
 
         # --- 9. Store final results and cleanup ---
-        self.__store_final_results()
+        self._store_final_results()
 
                     
 
