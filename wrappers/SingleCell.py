@@ -16,11 +16,14 @@ Output:
 """
 # -----------------------Package Import & Defined Arguements-------------------#
 import os
+import sys
+import pathlib
 import importlib.util
 
 import pandas as pd
 
-from Experiment.AbstractSimulator import AbstractSimulator
+sys.path.append(f'{os.path.dirname(__file__)}/../src')
+from src.benchtop.AbstractSimulator import AbstractSimulator
 
 # Absolute path to compiled extension (pySingleCell*.so file)
 so_path = os.path.join(
@@ -49,17 +52,12 @@ class SingleCell(AbstractSimulator):
         Populates self.tool with custom module, enables extensibility in 
         experiment framework
         """
-        super().__init__(args, kwargs)
+        super().__init__(*args, **kwargs)
 
     def load(self,*args, **kwargs) -> SC:
         """Meets parent class loader method for SingleCell loader"""
         
-        sbml_list = []
-
-        for sbml_path in args:
-            sbml_list.append(sbml_path)
-        
-        self.tool(*sbml_list)
+        self.tool = SC(*args)
 
     def getStateIds(self, *args, **kwargs) -> list:
         return self.tool.getGlobalSpeciesIds()
