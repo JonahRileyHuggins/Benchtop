@@ -10,11 +10,16 @@ author: Jonah R. Huggins
 
 # -----------------------Package Import & Defined Arguements-------------------#
 import os
+import sys
 import logging
 from typing import List
 from types import SimpleNamespace
+
+sys.path.append(os.path.dirname(__file__))
 from Experiment import Experiment
 
+sys.path.append(f'{__file__}/../../')
+from wrappers.SingleCell import SingleCell
 logging.basicConfig(
     level=logging.INFO, # Overriden if Verbose Arg. True
     format="%(asctime)s - %(levelname)s - %(message)s"
@@ -88,9 +93,15 @@ class Experimentalist:
         if self.args.verbose:
             logging.getLogger().setLevel(logging.DEBUG)
 
-        experiment = Experiment(self.args.path, self.args.cores)
+        experiment = Experiment(
+            petab_yaml=self.args.path, 
+            cores=self.args.cores, 
+            cache_dir=self.args.cache_dir, 
+            load_index=self.args.load_index,
+            verbose=self.args.verbose
+            )
 
-        experiment.run()
+        experiment.run(SingleCell, *self.args.sbml)
 
         logger.debug("Closed simulation method successfully.")
 

@@ -11,18 +11,20 @@ author: Jonah R. Huggins
 # ============ Package Import ============
 # =========================================
 import os
+import sys
 import logging
 import argparse
 import pickle as pkl
 from datetime import date
 import multiprocessing as mp
 
-from src.benchtop.Worker import worker_method
-from src.benchtop.Record import Record
-from src.benchtop.Organizer import Organizer
-import src.benchtop.ObservableCalculator as obs
-from src.benchtop.file_loader import FileLoader
-from src.benchtop.AbstractSimulator import AbstractSimulator
+sys.path.append(os.path.dirname(__file__))
+from Worker import worker_method
+from Record import Record
+from Organizer import Organizer
+import ObservableCalculator as obs
+from file_loader import FileLoader
+from AbstractSimulator import AbstractSimulator
 
 
 logging.basicConfig(

@@ -8,8 +8,8 @@ Author: Jonah R. Huggins
 """
 import pandas as pd
 
-import src.benchtop.utils as utils
-from src.benchtop.ResultsCacher import ResultCache
+import utils as utils
+from ResultsCacher import ResultCache
 
 
 class Record:
