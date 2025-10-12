@@ -269,7 +269,7 @@ class Experiment:
             tasks = []
             for _ in range(self.size):
                 if delayed_tasks:
-                    tasks.append(delayed_tasks.popleft())
+                    tasks.append(delayed_tasks.pop(0))
                 else:
                     tasks.append(None)
 
