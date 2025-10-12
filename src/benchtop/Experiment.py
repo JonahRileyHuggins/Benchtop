@@ -16,6 +16,7 @@ import logging
 import argparse
 import pickle as pkl
 from datetime import date
+from typing import Union
 import multiprocessing as mp
 
 sys.path.append(os.path.dirname(__file__))
@@ -37,7 +38,7 @@ logger = logging.getLogger(__name__)
 class Experiment:
 
     def __init__(self, 
-                 petab_yaml: os.PathLike | str, 
+                 petab_yaml: Union[os.PathLike, str], 
                  cores: int = os.cpu_count(),
                  cache_dir: str = './.cache',
                  load_index: bool = False,
