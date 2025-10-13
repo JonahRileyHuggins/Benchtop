@@ -10,7 +10,6 @@ Description: shared-utility functions for Experiments class.
 """
 # -----------------------Package Import & Defined Arguements-------------------#
 
-@staticmethod
 def identifier_generator():
     """This function generates a unique identifier for the iterative
         of each simulation process.
@@ -25,7 +24,6 @@ def identifier_generator():
 
     return identifier
 
-@staticmethod
 def tasks_this_round(size, total_jobs, round_number):
     """Calculate the number of tasks for the current round
     input:
@@ -55,7 +53,6 @@ def tasks_this_round(size, total_jobs, round_number):
 
     return tasks_this_round
 
-@staticmethod 
 def parse_kwargs(arg_list: list)-> dict:
     """Parses catchall function."""
 

@@ -3,7 +3,8 @@ import os
 import json
 import pickle
 import shutil
-from typing import Any
+from typing import Any, Dict, Optional
+
 import pandas as pd
 
 
@@ -11,7 +12,7 @@ class ResultCache:
 
     def __init__(
             self, 
-            results_dict: dict[str, Any] | None = None, 
+            results_dict: Optional[Dict[str, Any]] = None, 
             cache_dir: str = './.cache', 
             load_index: bool = False
         ) -> None:
@@ -83,7 +84,7 @@ class ResultCache:
         """Removes cache directory after results have been saved."""
         shutil.rmtree(self.cache_dir, ignore_errors=False)
 
-    def read_cache_index(self) -> dict[str, Any]:
+    def read_cache_index(self) -> Dict[str, Any]:
         """Read cache_index.json as dictionary"""
         with open(self.cache_index_path, 'r') as file:
             cache_index = json.load(file)

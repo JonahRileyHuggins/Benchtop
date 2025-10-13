@@ -9,6 +9,7 @@ author: Jonah R. Huggins
 
 import os
 import json
+from typing import Union
 from types import SimpleNamespace
 
 import yaml
@@ -17,7 +18,7 @@ import pandas as pd
 
 class FileLoader:
     """Generic Object for loading everything listed in a YAML config."""
-    def __init__(self, config_path: str | os.PathLike):
+    def __init__(self, config_path: Union[str, os.PathLike]):
         self.config_path = config_path
 
         # 1) load the raw YAML into a DotDict
