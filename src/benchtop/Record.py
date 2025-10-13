@@ -84,8 +84,8 @@ class Record:
         # results keys should all be species names paired with single numpy arrays. 
         found = False
         for key in self.results_dict.keys():
-            if self.results_dict[key]['conditionId'] == condition_id\
-                and self.results_dict[key]['cell'] == cell:
+            if str(self.results_dict[key]['conditionId']) == str(condition_id)\
+                and str(self.results_dict[key]['cell']) == str(cell):
                 found = True
                 logger.debug(f"results found for {condition_id} and cell {cell}")
                 return self.cache.load(key)

@@ -19,7 +19,7 @@ from Record import Record
 from AbstractSimulator import AbstractSimulator
 
 logging.basicConfig(
-    level=logging.INFO, # Overriden if Verbose Arg. True
+    level=logging.DEBUG, # Overriden if Verbose Arg. True
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
@@ -142,7 +142,7 @@ class Worker:
                     
                     if precondition_df is not None:
 
-                        logger.debug((
+                        logger.info((
                             f"Extracting preequilibration condition {precondition_id}",
                             f"for condition {condition_id}"
                         ))
@@ -153,11 +153,9 @@ class Worker:
                         precondition_results = precondition_df.iloc[-1, :].to_list()
 
         return precondition_results
-
-
+    
     def __setModelState(self, names: list, states: list) -> None:
         """Set model state with list of floats"""
-
         
         # Drop unwanted metadata keys
         blacklist_names = ["conditionId", "conditionName"]

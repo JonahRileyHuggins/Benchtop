@@ -10,4 +10,4 @@ problems:
     - observables.tsv
     sbml_files:
     - LR-model.xml
-    cell_count: 2
+    cell_count: 3

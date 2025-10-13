@@ -1,8 +1,0 @@
-observableId	preequilibrationConditionId	simulationConditionId	measurement	time
-blank		heterogenize	None	86400
-R_gene_activity	heterogenize	primary-condition	None	86400
-R_gene_activity	primary-condition	secondary-condition	None	86400
-LR-complex	heterogenize	primary-condition	None	86400
-LR-complex	primary-condition	secondary-condition	0	0
-LR-complex	primary-condition	secondary-condition	1	43200
-LR-complex	primary-condition	secondary-condition	20	86400

@@ -2,3 +2,6 @@ __pycache__
 .venv
 *.un
 *~
+*.pkl
+.cache/*
+.cache\*

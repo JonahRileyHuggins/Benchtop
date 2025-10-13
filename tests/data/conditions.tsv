@@ -1,4 +1,5 @@
 conditionId	conditionName	cyt_prot__LIGAND_	nuc_gene_a__LIGAND_	nuc_gene_i__LIGAND_	nuc_gene_a__RECEPTOR_	nuc_gene_i__RECEPTOR_	cyt_mrna__LIGAND_	cyt_mrna__RECEPTOR_
 heterogenize	base values	0	2	0	2	0	5	5
 primary-condition	some start	10	2	0	2	0	5	5
-secondary-condition	some second	0	0	2	0	2	0	0
+secondary-condition	some second	100	2	0	2	0	5	5
+adjacent-primary		100	2	0	2	0	10	10

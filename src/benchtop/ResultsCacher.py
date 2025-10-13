@@ -15,7 +15,7 @@ class ResultCache:
             cache_dir: str = './.cache', 
             load_index: bool = False
         ) -> None:
-        self.cache_dir = cache_dir
+        self.cache_dir = os.path.abspath(cache_dir)
 
         os.makedirs(self.cache_dir, exist_ok=True)
 

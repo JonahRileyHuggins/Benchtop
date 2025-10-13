@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created by COPASI version 4.45 (Build 298) on 2025-06-11 09:56 with libSBML version 5.20.0. -->
+<sbml xmlns="http://www.sbml.org/sbml/level2/version4" level="2" version="4">
+  <model metaid="COPASI0" id="_1" name="_1">
+    <annotation>
+      <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:vCard="http://www.w3.org/2001/vcard-rdf/3.0#" xmlns:bqbiol="http://biomodels.net/biology-qualifiers/" xmlns:bqmodel="http://biomodels.net/model-qualifiers/">
+        <rdf:Description rdf:about="#COPASI0">
+          <dcterms:created rdf:parseType="Resource">
+            <dcterms:W3CDTF>2025-06-10T15:58:26Z</dcterms:W3CDTF>
+          </dcterms:created>
+          <dcterms:modified rdf:parseType="Resource">
+            <dcterms:W3CDTF>2025-06-10T15:58:26Z</dcterms:W3CDTF>
+          </dcterms:modified>
+        </rdf:Description>
+      </rdf:RDF>
+      <copasi:COPASI xmlns:copasi="http://www.copasi.org/static/sbml">
+        <rdf:RDF xmlns:dcterms="http://purl.org/dc/terms/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+          <rdf:Description rdf:about="#COPASI0">
+            <dcterms:created>
+              <rdf:Description>
+                <dcterms:W3CDTF>2025-06-10T15:58:26Z</dcterms:W3CDTF>
+              </rdf:Description>
+            </dcterms:created>
+          </rdf:Description>
+        </rdf:RDF>
+      </copasi:COPASI>
+    </annotation>
+    <listOfFunctionDefinitions>
+      <functionDefinition id="Function_for_vTL1" name="Function for vTL1">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <lambda>
+            <bvar>
+              <ci> cyt_mrna__LIGAND_ </ci>
+            </bvar>
+            <bvar>
+              <ci> kTL1_1 </ci>
+            </bvar>
+            <apply>
+              <times/>
+              <ci> kTL1_1 </ci>
+              <ci> cyt_mrna__LIGAND_ </ci>
+            </apply>
+          </lambda>
+        </math>
+      </functionDefinition>
+      <functionDefinition id="Function_for_vTL2" name="Function for vTL2">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <lambda>
+            <bvar>
+              <ci> cyt_mrna__RECEPTOR_ </ci>
+            </bvar>
+            <bvar>
+              <ci> kTL2_1 </ci>
+            </bvar>
+            <apply>
+              <times/>
+              <ci> kTL2_1 </ci>
+              <ci> cyt_mrna__RECEPTOR_ </ci>
+            </apply>
+          </lambda>
+        </math>
+      </functionDefinition>
+      <functionDefinition id="Function_for_vTC1_1" name="Function for vTC1_1">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <lambda>
+            <bvar>
+              <ci> Cytoplasm </ci>
+            </bvar>
+            <bvar>
+              <ci> kTC1_1 </ci>
+            </bvar>
+            <bvar>
+              <ci> nuc_gene_a__LIGAND_ </ci>
+            </bvar>
+            <apply>
+              <times/>
+              <ci> kTC1_1 </ci>
+              <ci> nuc_gene_a__LIGAND_ </ci>
+              <ci> Cytoplasm </ci>
+            </apply>
+          </lambda>
+        </math>
+      </functionDefinition>
+      <functionDefinition id="Function_for_vTC2_1" name="Function for vTC2_1">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <lambda>
+            <bvar>
+              <ci> Cytoplasm </ci>
+            </bvar>
+            <bvar>
+              <ci> kTC2_1 </ci>
+            </bvar>
+            <bvar>
+              <ci> nuc_gene_a__RECEPTOR_ </ci>
+            </bvar>
+            <apply>
+              <times/>
+              <ci> kTC2_1 </ci>
+              <ci> nuc_gene_a__RECEPTOR_ </ci>
+              <ci> Cytoplasm </ci>
+            </apply>
+          </lambda>
+        </math>
+      </functionDefinition>
+    </listOfFunctionDefinitions>
+    <listOfUnitDefinitions>
+      <unitDefinition id="length" name="length">
+        <listOfUnits>
+          <unit kind="metre" exponent="1" scale="0" multiplier="1"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="area" name="area">
+        <listOfUnits>
+          <unit kind="metre" exponent="2" scale="0" multiplier="1"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="volume" name="volume">
+        <listOfUnits>
+          <unit kind="litre" exponent="1" scale="0" multiplier="1"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="time" name="time">
+        <listOfUnits>
+          <unit kind="second" exponent="1" scale="0" multiplier="1"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="substance" name="substance">
+        <listOfUnits>
+          <unit kind="mole" exponent="1" scale="-9" multiplier="1"/>
+        </listOfUnits>
+      </unitDefinition>
+    </listOfUnitDefinitions>
+    <listOfCompartments>
+      <compartment id="Cytoplasm" name="Cytoplasm" spatialDimensions="3" size="5.25e-12" constant="true"/>
+      <compartment id="Nucleus" name="Nucleus" spatialDimensions="3" size="1.75e-12" constant="true"/>
+    </listOfCompartments>
+    <listOfSpecies>
+      <species id="cyt_prot__LIGAND_" name="cyt_prot__LIGAND_" compartment="Cytoplasm" initialConcentration="0" boundaryCondition="false" constant="false"/>
+      <species id="cyt_prot__RECEPTOR_" name="cyt_prot__RECEPTOR_" compartment="Cytoplasm" initialConcentration="100" boundaryCondition="false" constant="false"/>
+      <species id="cyt_prot__LIGAND__RECEPTOR_" name="cyt_prot__LIGAND__RECEPTOR_" compartment="Cytoplasm" initialConcentration="0" boundaryCondition="false" constant="false"/>
+      <species id="nuc_gene_a__LIGAND_" name="nuc_gene_a__LIGAND_" compartment="Nucleus" initialConcentration="0.0009489016" boundaryCondition="false" constant="false"/>
+      <species id="nuc_gene_i__LIGAND_" name="nuc_gene_i__LIGAND_" compartment="Nucleus" initialConcentration="0.0009489016" boundaryCondition="false" constant="false"/>
+      <species id="nuc_gene_a__RECEPTOR_" name="nuc_gene_a__RECEPTOR_" compartment="Nucleus" initialConcentration="0.0009489016" boundaryCondition="false" constant="false"/>
+      <species id="nuc_gene_i__RECEPTOR_" name="nuc_gene_i__RECEPTOR_" compartment="Nucleus" initialConcentration="0.0009489016" boundaryCondition="false" constant="false"/>
+      <species id="cyt_mrna__LIGAND_" name="cyt_mrna__LIGAND_" compartment="Cytoplasm" initialConcentration="0.001581503" boundaryCondition="false" constant="false"/>
+      <species id="cyt_mrna__RECEPTOR_" name="cyt_mrna__RECEPTOR_" compartment="Cytoplasm" initialConcentration="0.001581503" boundaryCondition="false" constant="false"/>
+    </listOfSpecies>
+    <listOfParameters>
+      <parameter id="kGac1_1" name="kGac1_1" value="0.0005" constant="true"/>
+      <parameter id="kGac2_1" name="kGac2_1" value="0.0005" constant="true"/>
+      <parameter id="kGin1_1" name="kGin1_1" value="0.005" constant="true"/>
+      <parameter id="kGin2_1" name="kGin2_1" value="0.005" constant="true"/>
+      <parameter id="kTC1_1" name="kTC1_1" value="0.005" constant="true"/>
+      <parameter id="kTC2_1" name="kTC2_1" value="0.005" constant="true"/>
+      <parameter id="kTCd1_1" name="kTCd1_1" value="5e-05" constant="true"/>
+      <parameter id="kTCd2_1" name="kTCd2_1" value="5e-05" constant="true"/>
+      <parameter id="kTL1_1" name="kTL1_1" value="1" constant="true"/>
+      <parameter id="kTL2_1" name="kTL2_1" value="1" constant="true"/>
+      <parameter id="kLR1_1" name="kLR1_1" value="0.001" constant="true"/>
+      <parameter id="kLR2_1" name="kLR2_1" value="0.001" constant="true"/>
+      <parameter id="kLR3_1" name="kLR3_1" value="5e-05" constant="true"/>
+      <parameter id="kLR4_1" name="kLR4_1" value="5e-05" constant="true"/>
+      <parameter id="kLR5_1" name="kLR5_1" value="5e-05" constant="true"/>
+    </listOfParameters>
+    <listOfReactions>
+      <reaction id="vGac1" name="vGac1" reversible="false">
+        <listOfReactants>
+          <speciesReference species="nuc_gene_i__LIGAND_" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="nuc_gene_a__LIGAND_" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> Nucleus </ci>
+              <ci> kGac1_1 </ci>
+              <ci> nuc_gene_i__LIGAND_ </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="vGac2" name="vGac2" reversible="false">
+        <listOfReactants>
+          <speciesReference species="nuc_gene_i__RECEPTOR_" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="nuc_gene_a__RECEPTOR_" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> Nucleus </ci>
+              <ci> kGac2_1 </ci>
+              <ci> nuc_gene_i__RECEPTOR_ </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="vGin1" name="vGin1" reversible="false">
+        <listOfReactants>
+          <speciesReference species="nuc_gene_a__LIGAND_" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="nuc_gene_i__LIGAND_" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> Nucleus </ci>
+              <ci> kGin1_1 </ci>
+              <ci> nuc_gene_a__LIGAND_ </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="vGin2" name="vGin2" reversible="false">
+        <listOfReactants>
+          <speciesReference species="nuc_gene_a__RECEPTOR_" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="nuc_gene_i__RECEPTOR_" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> Nucleus </ci>
+              <ci> kGin2_1 </ci>
+              <ci> nuc_gene_a__RECEPTOR_ </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="vTC1" name="vTC1" reversible="false">
+        <listOfProducts>
+          <speciesReference species="cyt_mrna__LIGAND_" stoichiometry="1"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference species="nuc_gene_a__LIGAND_"/>
+        </listOfModifiers>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <ci> Function_for_vTC1_1 </ci>
+              <ci> Cytoplasm </ci>
+              <ci> kTC1_1 </ci>
+              <ci> nuc_gene_a__LIGAND_ </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="vTC2" name="vTC2" reversible="false">
+        <listOfProducts>
+          <speciesReference species="cyt_mrna__RECEPTOR_" stoichiometry="1"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference species="nuc_gene_a__RECEPTOR_"/>
+        </listOfModifiers>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <ci> Function_for_vTC2_1 </ci>
+              <ci> Cytoplasm </ci>
+              <ci> kTC2_1 </ci>
+              <ci> nuc_gene_a__RECEPTOR_ </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="vTCd1" name="vTCd1" reversible="false">
+        <listOfReactants>
+          <speciesReference species="cyt_mrna__LIGAND_" stoichiometry="1"/>
+        </listOfReactants>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> Cytoplasm </ci>
+              <ci> kTCd1_1 </ci>
+              <ci> cyt_mrna__LIGAND_ </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="vTCd2" name="vTCd2" reversible="false">
+        <listOfReactants>
+          <speciesReference species="cyt_mrna__RECEPTOR_" stoichiometry="1"/>
+        </listOfReactants>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> Cytoplasm </ci>
+              <ci> kTCd2_1 </ci>
+              <ci> cyt_mrna__RECEPTOR_ </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="vTL1" name="vTL1" reversible="false">
+        <listOfProducts>
+          <speciesReference species="cyt_prot__LIGAND_" stoichiometry="1"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference species="cyt_mrna__LIGAND_"/>
+        </listOfModifiers>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> Cytoplasm </ci>
+              <apply>
+                <ci> Function_for_vTL1 </ci>
+                <ci> cyt_mrna__LIGAND_ </ci>
+                <ci> kTL1_1 </ci>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="vTL2" name="vTL2" reversible="false">
+        <listOfProducts>
+          <speciesReference species="cyt_prot__RECEPTOR_" stoichiometry="1"/>
+        </listOfProducts>
+        <listOfModifiers>
+          <modifierSpeciesReference species="cyt_mrna__RECEPTOR_"/>
+        </listOfModifiers>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> Cytoplasm </ci>
+              <apply>
+                <ci> Function_for_vTL2 </ci>
+                <ci> cyt_mrna__RECEPTOR_ </ci>
+                <ci> kTL2_1 </ci>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="vLR1" name="vLR1" reversible="false">
+        <listOfReactants>
+          <speciesReference species="cyt_prot__LIGAND_" stoichiometry="1"/>
+          <speciesReference species="cyt_prot__RECEPTOR_" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="cyt_prot__LIGAND__RECEPTOR_" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> Cytoplasm </ci>
+              <ci> kLR1_1 </ci>
+              <ci> cyt_prot__LIGAND_ </ci>
+              <ci> cyt_prot__RECEPTOR_ </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="vLR2" name="vLR2" reversible="false">
+        <listOfReactants>
+          <speciesReference species="cyt_prot__LIGAND__RECEPTOR_" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="cyt_prot__LIGAND_" stoichiometry="1"/>
+          <speciesReference species="cyt_prot__RECEPTOR_" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> Cytoplasm </ci>
+              <ci> kLR2_1 </ci>
+              <ci> cyt_prot__LIGAND__RECEPTOR_ </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="vLR3" name="vLR3" reversible="false">
+        <listOfReactants>
+          <speciesReference species="cyt_prot__LIGAND_" stoichiometry="1"/>
+        </listOfReactants>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> Cytoplasm </ci>
+              <ci> kLR3_1 </ci>
+              <ci> cyt_prot__LIGAND_ </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="vLR4" name="vLR4" reversible="false">
+        <listOfReactants>
+          <speciesReference species="cyt_prot__RECEPTOR_" stoichiometry="1"/>
+        </listOfReactants>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> Cytoplasm </ci>
+              <ci> kLR4_1 </ci>
+              <ci> cyt_prot__RECEPTOR_ </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="vLR5" name="vLR5" reversible="false">
+        <listOfReactants>
+          <speciesReference species="cyt_prot__LIGAND__RECEPTOR_" stoichiometry="1"/>
+        </listOfReactants>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> Cytoplasm </ci>
+              <ci> kLR5_1 </ci>
+              <ci> cyt_prot__LIGAND__RECEPTOR_ </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+    </listOfReactions>
+  </model>
+</sbml>

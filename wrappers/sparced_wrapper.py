@@ -141,7 +141,7 @@ class WrapSPARCED(AbstractSimulator):
                     for i in range(len(parameter_ids))
                 ])
             )
-            logger.info(f"Modified parameter '{component}' (index {comp_idx}) to {value}")
+            logger.info(f"Modified parameter '{self.tool.model.getParameterByName(component)}' (index {comp_idx}) to {value}")
             return
 
         else:

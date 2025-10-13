@@ -19,10 +19,10 @@ import logging
 import pandas as pd
 import tellurium as te
 
-from Experiment.AbstractSimulator import AbstractSimulator
+from AbstractSimulator import AbstractSimulator
 
 logging.basicConfig(
-    level=logging.INFO, # Overriden if Verbose Arg. True
+    level=logging.DEBUG, # Overriden if Verbose Arg. True
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
@@ -35,9 +35,10 @@ class WrapTellurium(AbstractSimulator):
 
     def load(self, *args, **kwargs):
         # default path for testing
-        sbml_path = "../tests/LR-Benchmark/LR-model.xml"
+        sbml_path = "LR-model.xml"
         # If a nested tuple is passed, unpack it
         for arg in args:
+            logger.debug(f"Interpreting argument: {arg}")
             if type(arg) == str and os.path.exists(arg):
 
                 _, extension = os.path.splitext(arg)
@@ -47,7 +48,13 @@ class WrapTellurium(AbstractSimulator):
                     sbml_path = str(pathlib.Path(arg).expanduser().resolve())
 
         self.tool = te.loadSBMLModel(sbml_path)
-        return self.tool
+        self.tool.setIntegrator('rk45')
+        integrator = self.tool.getIntegrator()
+        integrator.absolute_tolerance = 1e-8
+        integrator.relative_tolerance = 1e-6
+        integrator.maximum_bisect = 10
+        integrator.max_steps = 1e6
+
 
     def getStateIds(self, *args, **kwargs) -> list:
         return self.tool.getFloatingSpeciesIds()
@@ -61,11 +68,11 @@ class WrapTellurium(AbstractSimulator):
             - results_dataframe (pd.DataFrame): finalized results of simulation. 
         """
 
-        n_points = int((stop - start) / step)
+        n_points = int(((stop+step) - start) / step)
 
         results_array = self.tool.simulate(
             start=float(start),
-            end=float(stop), 
+            end=float(stop+step), 
             points=n_points
             )
 
@@ -84,4 +91,5 @@ class WrapTellurium(AbstractSimulator):
         """
         Method for SingleCell simulator modify method
         """
-        self.tool[component] = value
+        logger.debug(f"Assigning model state variable {component} to value {value}  ({type(value)})")
+        self.tool[component] = float(value)
