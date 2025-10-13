@@ -6,10 +6,17 @@ Class object for handling results.
 Author: Jonah R. Huggins
 
 """
+import logging
 import pandas as pd
 
 import utils as utils
 from ResultsCacher import ResultCache
+
+logging.basicConfig(
+    level=logging.INFO, # Overriden if Verbose Arg. True
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 
 class Record:
@@ -75,11 +82,18 @@ class Record:
             ) -> pd.DataFrame:
         """Indexes results dictionary on condition id, returns results"""
         # results keys should all be species names paired with single numpy arrays. 
+        found = False
         for key in self.results_dict.keys():
             if self.results_dict[key]['conditionId'] == condition_id\
                 and self.results_dict[key]['cell'] == cell:
-
+                found = True
+                logger.debug(f"results found for {condition_id} and cell {cell}")
                 return self.cache.load(key)
+            
+        if found == False: 
+            logger.error(f"No prior results found for {condition_id} at cell {cell}")
+        
+        
             
     def condition_cell_id(
         self,
