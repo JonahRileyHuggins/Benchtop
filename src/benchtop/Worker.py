@@ -138,18 +138,19 @@ class Worker:
                 
                 if pd.notna(precondition_id) and str(precondition_id).strip().lower() != 'nan':
 
-                    logger.debug((
-                        f"Extracting preequilibration condition {precondition_id}",
-                        f"for condition {condition_id}"
-                    ))
-
                     precondition_df = self.record.results_lookup(precondition_id, cell)
                     
                     if precondition_df is not None:
+
+                        logger.debug((
+                            f"Extracting preequilibration condition {precondition_id}",
+                            f"for condition {condition_id}"
+                        ))
+
                         if "time" in precondition_df.columns: 
                             precondition_df = precondition_df.drop("time", axis = 1)
 
-                        precondition_results = precondition_df.iloc[:, -1]
+                        precondition_results = precondition_df.iloc[-1, :].to_list()
 
         return precondition_results
 
