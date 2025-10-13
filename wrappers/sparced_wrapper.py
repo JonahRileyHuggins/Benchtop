@@ -13,14 +13,15 @@ Output:
 
 """
 import os
+import sys
 import pathlib
+import importlib
 import logging
+from typing import Union
 
 import amici
 import numpy as np
 import pandas as pd
-
-import sys
 
 sys.path.append('../')
 sys.path.append('../bin/')
@@ -55,15 +56,28 @@ class WrapSPARCED(AbstractSimulator):
                 if extension == ".xml":
 
                     self.tool.sbml_file = str(pathlib.Path(arg).expanduser().resolve())
+                    logger.debug(f"SBML Model found: {arg}")
 
             if os.path.isdir(arg):
                 model_module = amici.import_model_module("SPARCED", arg)
                 #model_module = importlib.import_module(arg)
                 self.tool.model = model_module.getModel()
-                self.tool.species_initializations = [value for value in self.tool.model.getInitialStates()]
+
+                species_sheet = np.array([np.array(line.strip().split("\t")) for line in open('Species.txt', encoding='latin-1')])
+
+                species_initializations = []
+                for row in species_sheet[1:]:
+                    species_initializations.append(float(row[2]))
+                species_initializations = np.array(species_initializations)
+                species_initializations[np.argwhere(species_initializations <= 1e-6)] = 0.0
+
+                self.tool.species_initializations = species_initializations
+                logger.debug(f"AMICI Model found: {arg}")
 
             if type(arg) == int:
                 self.tool.flagD = arg
+                logger.debug(f"Setting Simulation to: {arg}")
+
 
     def getStateIds(self, *args, **kwargs) -> list:
         return self.tool.model.getStateIds()
@@ -109,7 +123,7 @@ class WrapSPARCED(AbstractSimulator):
     def modify(
             self, 
             component: str, 
-            value: int | float
+            value: Union[int, float]
             ):
         """
         Modify the initial condition or parameter value in the AMICI model.
@@ -129,7 +143,7 @@ class WrapSPARCED(AbstractSimulator):
         if component in species_ids:
             comp_idx = species_ids.index(component)
             self.tool.species_initializations[comp_idx] = value
-            logger.info(f"Modified species '{component}' (index {comp_idx}) to {value}")
+            logger.debug(f"Modified species '{component}' (index {comp_idx}) to {value}")
             return
 
         # Modify parameter values
@@ -141,7 +155,7 @@ class WrapSPARCED(AbstractSimulator):
                     for i in range(len(parameter_ids))
                 ])
             )
-            logger.info(f"Modified parameter '{self.tool.model.getParameterByName(component)}' (index {comp_idx}) to {value}")
+            logger.debug(f"Modified parameter '{component}' (index {comp_idx}) to {value}")
             return
 
         else:
