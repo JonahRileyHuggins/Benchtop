@@ -82,16 +82,14 @@ class Record:
             ) -> pd.DataFrame:
         """Indexes results dictionary on condition id, returns results"""
         # results keys should all be species names paired with single numpy arrays. 
-        found = False
         for key in self.results_dict.keys():
             if str(self.results_dict[key]['conditionId']) == str(condition_id)\
                 and str(self.results_dict[key]['cell']) == str(cell):
-                found = True
                 logger.debug(f"results found for {condition_id} and cell {cell}")
                 return self.cache.load(key)
             
-        if found == False: 
-            logger.error(f"No prior results found for {condition_id} at cell {cell}")
+
+        logger.error(f"No prior results found for {condition_id} at cell {cell}")
         
         
             
