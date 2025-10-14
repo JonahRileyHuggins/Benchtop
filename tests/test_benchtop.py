@@ -1,5 +1,7 @@
 import os
 import sys
+import shutil
+
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
@@ -10,9 +12,14 @@ def test_run() -> None:
 
     assert os.path.basename(os.getcwd()) == 'Benchtop'
 
+    cache_path = './tests/data/.cache'
+
+    if os.path.exists(cache_path):
+        shutil.rmtree(cache_path, ignore_errors=True)
+
 
     config_path = "./tests/data/LR-benchmark.yaml"
-    experiment = Experiment(config_path, cache_dir='./tests/data/.cache', cores=os.cpu_count(), verbose=True)
+    experiment = Experiment(config_path, cache_dir=cache_path, cores=os.cpu_count(), verbose=True)
 
     cache_dir = os.path.join(os.path.dirname(config_path), '.cache')
     assert os.path.isdir(cache_dir)

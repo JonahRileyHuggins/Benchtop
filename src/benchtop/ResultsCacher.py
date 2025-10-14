@@ -3,6 +3,7 @@ import os
 import json
 import pickle
 import shutil
+import multiprocessing
 from typing import Any, Dict, Optional
 
 import pandas as pd
@@ -47,15 +48,17 @@ class ResultCache:
             with open(self.cache_index_path, 'r') as f:
                 self.results_dict = json.load(f)
 
+
     def _key_to_path(self, key: str) -> str:
         """Convert a dictionary key to a safe file path"""
 
         return os.path.join(self.cache_dir, f"{key}.pkl")
 
     def update_cache_index(self, key: str, status: bool) -> None:
-        # Read the current cache
-        with open(self.cache_index_path, 'r') as f:
-            cache_data = json.load(f)
+        with multiprocessing.Lock():
+            # Read the current cache
+            with open(self.cache_index_path, 'r') as f:
+                cache_data = json.load(f)
 
         # Update the entry
         cache_data[key]['complete'] = status
@@ -66,11 +69,11 @@ class ResultCache:
 
     def save(self, key: str, df: pd.DataFrame) -> None:
         """Save a single DataFrame under a key"""
+        with multiprocessing.Lock():
+            path = self._key_to_path(key)
 
-        path = self._key_to_path(key)
-
-        with open(path, 'wb') as f:
-            pickle.dump(df, f)
+            with open(path, 'wb') as f:
+                pickle.dump(df, f)
 
     def load(self, key: str) -> pd.DataFrame:
         """Load a single DataFrame by key"""

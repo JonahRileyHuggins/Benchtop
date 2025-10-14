@@ -10,6 +10,9 @@ def run_tests() -> None:
     from test_benchtop import test_run
     test_run()
 
+    import test_worker
+    test_worker.test_worker()
+
 
 if __name__ == '__main__':
 

@@ -10,23 +10,23 @@ from src.benchtop.Record import Record
 from src.benchtop.Worker import Worker
 from wrappers.tellurium_wrapper import WrapTellurium
 
-cache_dir = "data/.cache/"
-if not os.path.exists(cache_dir) or len(os.listdir(cache_dir)) != 13:
+cache_dir = "./tests/data/.cache/"
+if not os.path.exists(cache_dir) or len(os.listdir(cache_dir)) < 13:
     from test_benchtop import test_run
     test_run()
 
-petab_yaml = "LR-Benchmark/LR-benchmark.yaml"
+petab_yaml = "./tests/data/LR-benchmark.yaml"
 
 loader = FileLoader(petab_yaml)
 loader._petab_files()
 
 record = Record(
     problem=loader.problems[0],
-    cache_dir="./data/.cache",
+    cache_dir="./tests/data/.cache",
     load_index=True,
 )
 
-sbml_path = "LR-Benchmark/LR-model.xml"
+sbml_path = "./tests/data/LR-model.xml"
 task = "heterogenize+1"
 
 
@@ -35,7 +35,7 @@ def test_worker() -> None:
         task=task,
         record=record,
         simulator=WrapTellurium,
-        args=sbml_path,
+        args=(sbml_path, ),
         start=0.0,
         step=30.0,
     )
@@ -62,13 +62,13 @@ def test_find_preequilibration_results(monkeypatch) -> None:
 
     # --- mock measurement DataFrame ---
     measurement_df = pd.DataFrame({
-        "simulationConditionId": ["heterogenize"],
-        "preequilibrationConditionId": ["baseline"]
+        "simulationConditionId": ["adjacent-primary"],
+        "preequilibrationConditionId": ["heterogenize"]
     })
 
     # --- mock record.results_lookup() ---
     def fake_results_lookup(condition_id, cell):
-        if condition_id == "baseline" and cell == cell_num:
+        if condition_id == "heterogenize" and cell == cell_num:
             return pd.DataFrame({
                 "time": [0, 100],
                 "species_A": [1.0, 2.0],
