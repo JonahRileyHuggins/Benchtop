@@ -11,8 +11,11 @@ def run_tests() -> None:
     test_run()
 
     import test_worker
-    test_worker.test_worker()
-
+    test_worker.test_worker_constructor()
+    test_worker.test_find_preequilibration_results()
+    test_worker.test_find_preequilibration_results_no_match()
+    test_worker.test_setModelState_basic()
+    test_worker.test_get_simulation_time()
 
 if __name__ == '__main__':
 

@@ -1,70 +1,90 @@
 import os
 import sys
+from multiprocessing import Manager
+from unittest.mock import patch, MagicMock
 sys.path.append(os.path.dirname(__file__))
 
 import pandas as pd
-import pytest
 
-from src.benchtop.file_loader import FileLoader
-from src.benchtop.Record import Record
 from src.benchtop.Worker import Worker
-from wrappers.tellurium_wrapper import WrapTellurium
 
 cache_dir = "./tests/data/.cache/"
 if not os.path.exists(cache_dir) or len(os.listdir(cache_dir)) < 13:
     from test_benchtop import test_run
     test_run()
 
-petab_yaml = "./tests/data/LR-benchmark.yaml"
+def make_dummy_worker():
+    """Creates a worker instance with minimal mocks required for testing"""
+    # fake simulator with dummy methods for class
+    dummy_simulator = MagicMock()
+    dummy_simulator.load = MagicMock()
+    dummy_simulator.modify = MagicMock()
+    dummy_simulator.getStateIds = MagicMock()
+    results_df = pd.DataFrame({
+        "good_var1": [1.0], 
+        "good_var2": [2.0],
+    })
+    dummy_simulator.simulate = MagicMock(return_value=results_df)
 
-loader = FileLoader(petab_yaml)
-loader._petab_files()
+    # fake record objet for testing
+    dummy_record = MagicMock()
+    dummy_record.problem = MagicMock()
 
-record = Record(
-    problem=loader.problems[0],
-    cache_dir="./tests/data/.cache",
-    load_index=True,
-)
+    measurement_df = pd.DataFrame({
+        "preequilibrationConditionId": ["None", "heterogenize"],
+        "simulationConditionId": ["primary-condition", "heterogenize"],
+        "time": [0, 1]
+    })
+    dummy_record.problem.measurement_files = [measurement_df]
 
-sbml_path = "./tests/data/LR-model.xml"
-task = "heterogenize+1"
+    dummy_record.results_lookup = MagicMock(return_value=None)
 
-
-def test_worker() -> None:
-    grunt = Worker(
-        task=task,
-        record=record,
-        simulator=WrapTellurium,
-        args=(sbml_path, ),
-        start=0.0,
-        step=30.0,
+    series = pd.Series(
+        data=[ "primary-condition", "base values", 0, 2 ],
+        index=["conditionId", "conditionName", "good_var1", "good_var2"]
     )
+
+    dummy_record.condition_cell_id = MagicMock(
+        return_value=(series, "1", "primary-condition")
+    )
+
+    with Manager() as manager:
+        lock = manager.Lock()
+
+        # Construct Worker using MagicMock simulator type
+        grunt = Worker(
+            task="primary-condition+1",
+            record=dummy_record,
+            simulator=dummy_simulator,
+            lock=lock,
+            args="dummy_path.xml",
+            start=0.0,
+            step=30.0,
+        )
+
+    assert grunt.simulator is None
+    
+    # Replace simulator (since constructor may override it)
+    grunt.simulator = dummy_simulator
+
+    return grunt, dummy_simulator
+
+
+def test_worker_constructor() -> None:
+    grunt, dummy_simulator = make_dummy_worker()
 
     # Sanity check
     assert grunt is not None
     assert isinstance(grunt, Worker)
-    assert grunt.simulator is None
 
 
-def test_find_preequilibration_results(monkeypatch) -> None:
+def test_find_preequilibration_results() -> None:
     """Test Worker.__extract_preequilibration_results logic in isolation."""
-    grunt = Worker(
-        task=task,
-        record=record,
-        simulator=WrapTellurium,
-        args=sbml_path,
-        start=0.0,
-        step=30.0,
-    )
+    grunt, dummy_simulator = make_dummy_worker()
 
+    task = "heterogenize+1"
     cond_id, cell_num = task.split("+")
     cell_num = int(cell_num)
-
-    # --- mock measurement DataFrame ---
-    measurement_df = pd.DataFrame({
-        "simulationConditionId": ["adjacent-primary"],
-        "preequilibrationConditionId": ["heterogenize"]
-    })
 
     # --- mock record.results_lookup() ---
     def fake_results_lookup(condition_id, cell):
@@ -77,35 +97,64 @@ def test_find_preequilibration_results(monkeypatch) -> None:
         return None
 
     # Apply mocks
-    grunt.record.problem.measurement_files = [measurement_df]
-    monkeypatch.setattr(grunt.record, "results_lookup", fake_results_lookup)
+    with patch.object(grunt.record, "results_lookup", fake_results_lookup):
+        results = grunt._Worker__extract_preequilibration_results(cond_id, cell_num)
 
-    # --- Execute ---
-    results = grunt._Worker__extract_preequilibration_results(cond_id, cell_num)
-
-    # --- Validate ---
     assert isinstance(results, list)
-    assert results == [2.0, 4.0], "Should extract final row (excluding time column)."
+    assert results == [2.0, 4.0]
 
-
-def test_find_preequilibration_results_no_match(monkeypatch) -> None:
+def test_find_preequilibration_results_no_match() -> None:
     """Ensure an empty list is returned when no preequilibration condition exists."""
-    grunt = Worker(
-        task=task,
-        record=record,
-        simulator=WrapTellurium,
-        args=sbml_path,
-        start=0.0,
-        step=30.0,
+    grunt, dummy_simulator = make_dummy_worker()
+
+    with patch.object(grunt.record, "results_lookup", lambda *_: None):
+        results = grunt._Worker__extract_preequilibration_results("heterogenize", 1)
+    assert results == [], "Should return empty list when no valid preequilibration condition."
+
+def test_setModelState_basic():
+    grunt, dummy_simulator = make_dummy_worker()
+
+    names = ["conditionId", "good_var1", "bad_var", "conditionName", "good_var2"]
+    states = [0, 1.23, 4.56, 0, 7.89]
+
+    # Configure modify() to raise ValueError once
+    def fake_modify(name, value):
+        if name == "bad_var":
+            raise ValueError("Invalid variable name")
+    dummy_simulator.modify.side_effect = fake_modify
+
+    # Run the private method directly
+    grunt._Worker__setModelState(names, states)
+
+    # Verify modify() calls
+    expected_calls = [
+        ("good_var1", 1.23),
+        ("bad_var", 4.56),
+        ("good_var2", 7.89),
+    ]
+    actual_calls = [tuple(call.args) for call in dummy_simulator.modify.call_args_list]
+
+    assert actual_calls == expected_calls, (
+        f"Expected modify calls {expected_calls}, got {actual_calls}"
     )
 
+def test_get_simulation_time():
+
+    grunt, _ = make_dummy_worker()
+    
     measurement_df = pd.DataFrame({
-        "simulationConditionId": ["heterogenize"],
-        "preequilibrationConditionId": [None],
+        "simulationConditionId": ["not_id", "heterogenize"],
+        "time": [0, 48]
     })
-
     grunt.record.problem.measurement_files = [measurement_df]
-    monkeypatch.setattr(grunt.record, "results_lookup", lambda *_: None)
 
-    results = grunt._Worker__extract_preequilibration_results("heterogenize", 1)
-    assert results == [], "Should return empty list when no valid preequilibration condition."
+    series = pd.Series(
+        data=[ "heterogenize", "base values", 0, 2 ],
+        index=["conditionId", "conditionName", "good_var1", "good_var2"]
+    )
+
+    time = grunt._Worker__get_simulation_time(series)
+
+    assert time == 48, (
+        f"Expected time returned 48, got {time}"
+    )

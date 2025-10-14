@@ -13,7 +13,6 @@ author: Jonah R. Huggins
 import os
 import sys
 import logging
-import argparse
 import pickle as pkl
 from datetime import date
 from typing import Union
@@ -124,22 +123,27 @@ class Experiment:
                 round_i=round_i
             )
 
-            logger.debug(f"Tasks for round: {tasks}")
+            # Lock ensures sequential read/write access for shared files
+            with mp.Manager() as manager:
+                lock = manager.Lock()
 
-            worker_args = [
-                (
-                    task, 
-                    self.record,
-                    simulator,
-                    *args,
-                    start,
-                    step
-                ) 
-                for task in tasks]
-            
-            # split workload across processes:
-            with mp.Pool(processes=self.size) as pool:
-                pool.starmap(worker_method, worker_args)
+                logger.debug(f"Tasks for round: {tasks}")
+
+                worker_args = [
+                    (
+                        task, 
+                        self.record,
+                        simulator,
+                        lock,
+                        *args,
+                        start,
+                        step, 
+                    ) 
+                    for task in tasks]
+                
+                # split workload across processes:
+                with mp.Pool(processes=self.size) as pool:
+                    pool.starmap(worker_method, worker_args)
                         
         # Have root store final results of all sims and cleanup cache
         self._store_final_results()

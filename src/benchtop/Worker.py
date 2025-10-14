@@ -28,13 +28,14 @@ def worker_method(
         task: str, 
         record: Record,
         simulator: AbstractSimulator,
+        lock: mp.Lock,
         args: tuple = (), 
         start: float = 0.0, 
         step: float = 30.0
             ):
     """Child process method for avoiding Multiprocessing from serializing Worker object"""
     # Instantiate and run inside the child process
-    Worker(task, record, simulator, args, start, step)
+    Worker(task, record, simulator, lock, args, start, step)
     return None  # avoid returning the Worker itself
 
 class Worker:
@@ -44,9 +45,10 @@ class Worker:
             task: str, 
             record: Record,
             simulator: AbstractSimulator,
+            lock: mp.Lock, 
             args: tuple = (), 
             start: float = 0.0, 
-            step: float = 30.0
+            step: float = 30.0,
         ):
         """
         simulator : AbstractSimulator
@@ -56,7 +58,7 @@ class Worker:
         args : tuple, optional
             Extra arguments to pass to function.
         """
-
+        self.lock = lock
         self.record = record
 
         # Store an instance of the simulator in worker class
@@ -208,9 +210,15 @@ class Worker:
             if self.record.results_dict[key]['conditionId'] == condition_id \
                 and self.record.results_dict[key]['cell'] == cell:
 
+                # Per-process safety check
+                self.lock.acquire()
+
                 # Save results to temporary cache directory
                 self.record.cache.save(key=key, df=results)
                 self.record.cache.update_cache_index(key=key, status=True)
+
+                # release for other processes to access
+                self.lock.release()
 
         return # Saves individual simulation data in cache directory
 
