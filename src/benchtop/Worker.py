@@ -134,12 +134,18 @@ class Worker:
                 measurement_df['simulationConditionId'] == condition_id
             ]
 
+
             if not precondition_matches.empty:
                 # Use iloc[0] to safely get the first preequilibrationConditionId
                 precondition_id = precondition_matches['preequilibrationConditionId'].iloc[0]
                 
                 if pd.notna(precondition_id) and str(precondition_id).strip().lower() != 'nan':
-
+                    
+                    logger.debug("Searching for condition_id:",
+                                  f"{condition_id} (type {type(condition_id)}), ",
+                                 "cell: {cell} (type {type(cell)})"
+                                )
+                    
                     precondition_df = self.record.results_lookup(precondition_id, cell)
                     
                     if precondition_df is not None:

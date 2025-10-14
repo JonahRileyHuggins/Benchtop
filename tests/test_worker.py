@@ -158,3 +158,37 @@ def test_get_simulation_time():
     assert time == 48, (
         f"Expected time returned 48, got {time}"
     )
+
+from unittest.mock import MagicMock
+import pandas as pd
+
+def test_model_state_assignment():
+    # --- Setup ---
+    grunt, _ = make_dummy_worker()
+
+    # Replace simulator with mock
+    grunt.simulator = MagicMock()
+    grunt.simulator.modify = MagicMock()
+
+    # 10 mock model variable names (excluding blacklisted ones)
+    model_names = [f"var_{i}" for i in range(10)]
+    model_states = list(range(1, 11))  # new values, all nonzero
+
+    # --- Action ---
+    grunt._Worker__setModelState(model_names, model_states)
+
+    # --- Assert ---
+    # ensure modify() called once per variable
+    assert grunt.simulator.modify.call_count == 10, \
+        f"Expected 10 modify calls, got {grunt.simulator.modify.call_count}"
+
+    # confirm all variables were modified with nonzero values
+    for (name, value), call in zip(zip(model_names, model_states),
+                                   grunt.simulator.modify.call_args_list):
+        args, _ = call
+        assert args == (name, value), f"Unexpected modify args {args}"
+        assert value != 0, f"Variable {name} was not reassigned properly"
+
+    print("✅ All 10 model states reassigned without error.")
+
+
