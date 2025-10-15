@@ -141,9 +141,9 @@ class Worker:
                 
                 if pd.notna(precondition_id) and str(precondition_id).strip().lower() != 'nan':
                     
-                    logger.debug("Searching for condition_id:",
+                    logger.debug(("Searching for condition_id:",
                                   f"{condition_id} (type {type(condition_id)}), ",
-                                 "cell: {cell} (type {type(cell)})"
+                                 f"cell: {cell} (type {type(cell)})")
                                 )
                     
                     precondition_df = self.record.results_lookup(precondition_id, cell)
@@ -176,8 +176,8 @@ class Worker:
 
                 self.simulator.modify(name, state)
 
-            except ValueError as e:
-                logger.error(f"ValueError while modifying {name}: {e}")
+            except ValueError as e: 
+                raise ValueError(f"ValueError while modifying {name}: {e}")
                 
         logger.debug("Updated model state")
 

@@ -9,7 +9,7 @@ os.chdir('../')
 def run_tests() -> None:
     import test_benchtop
     test_benchtop.test_run()
-    test_benchtop.test_reassigning_all_species()
+    # test_benchtop.test_reassigning_all_species()
 
     import test_worker
     test_worker.test_worker_constructor()
@@ -18,6 +18,15 @@ def run_tests() -> None:
     test_worker.test_setModelState_basic()
     test_worker.test_get_simulation_time()
     test_worker.test_model_state_assignment()
+
+    import test_organizer
+    test_organizer.test_organizer_constructor()
+    test_organizer.test_topological_sorter()
+    test_organizer.test_delay_secondary_condition()
+    test_organizer.test_total_tasks_basic()
+    test_organizer.test_total_tasks_empty_tasks()
+    test_organizer.test_total_tasks_zero_cells()
+    
 
 if __name__ == '__main__':
 

@@ -88,7 +88,6 @@ class Record:
                 logger.debug(f"results found for {condition_id} and cell {cell}")
                 return self.cache.load(key)
             
-
         logger.error(f"No prior results found for {condition_id} at cell {cell}")
         
         

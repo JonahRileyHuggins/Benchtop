@@ -31,7 +31,7 @@ from bin.modules.RunSPARCED import RunSPARCED
 
 
 logging.basicConfig(
-    level=logging.INFO, # Overriden if Verbose Arg. True
+    level=logging.DEBUG, # Overriden if Verbose Arg. True
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
