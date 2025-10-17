@@ -145,9 +145,6 @@ class Experiment:
                 with mp.Pool(processes=self.size) as pool:
                     pool.starmap(worker_method, worker_args)
                         
-        # Have root store final results of all sims and cleanup cache
-        self._store_final_results()
-
     def __sbml_getter(self) -> list:
         """Retrieves all sbml files defined in PEtab configuration file"""
         sbml_file_list = [
@@ -158,22 +155,6 @@ class Experiment:
         ]
 
         return sbml_file_list
-
-    def _store_final_results(self) -> None:
-        """Stores all simulation results stored in cache into Rank 0 self.results_dict object"""
-
-        for key in self.record.results_dict.keys(): 
-            
-            condition_id = self.record.results_dict[key]['conditionId']
-            cell = self.record.results_dict[key]['cell']
-
-            df = self.record.results_lookup(condition_id, cell)
-
-            for column in df.columns:
-
-                self.record.results_dict[key][column] = df[column]
-                
-        return # saves results to results_dict class member
 
     def save_results(self, args) -> None:
         """Save the results of the simulation to a file

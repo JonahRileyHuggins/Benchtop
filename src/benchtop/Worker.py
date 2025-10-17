@@ -86,7 +86,7 @@ class Worker:
 
             condition, cell, condition_id = self.record.condition_cell_id(
                 rank_task=task,
-                conditions_df=self.record.problem.condition_files[0]
+                conditions_df=self.record.problem.caondition_files[0]
             )
 
             logger.info(f"{rank} running {condition_id} for replicate {cell}")

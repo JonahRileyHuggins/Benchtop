@@ -17,8 +17,11 @@ class ResultCache:
             load_index: bool = False
         ) -> None:
         self.cache_dir = os.path.abspath(cache_dir)
-
-        os.makedirs(self.cache_dir, exist_ok=True)
+        try: 
+            os.makedirs(self.cache_dir, exist_ok=False)
+        except OSError as e:
+            shutil.rmtree(self.cache_dir)
+            os.makedirs(self.cache_dir, exist_ok=False)
 
         self.cache_index_path = os.path.join(self.cache_dir, "cache_index.json")
         
@@ -27,8 +30,8 @@ class ResultCache:
                 raise ValueError("results_dict must be provided when load_index=False")
 
             # Initialize new cache index with 'complete' flags
-            for key, value in results_dict.items():
-                value['complete'] = False
+            for key in results_dict.keys():
+                results_dict[key]['complete'] = False
 
             self.results_dict = results_dict
 
