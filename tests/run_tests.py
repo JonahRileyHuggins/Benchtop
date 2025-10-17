@@ -8,6 +8,8 @@ os.chdir('../')
 
 def run_tests() -> None:
     import test_benchtop
+    test_benchtop.test_results_dict_inheritance()
+    test_benchtop.test_results_saving()
     test_benchtop.test_run()
     # test_benchtop.test_reassigning_all_species()
 

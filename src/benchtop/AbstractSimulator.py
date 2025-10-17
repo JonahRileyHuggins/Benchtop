@@ -31,6 +31,7 @@ class AbstractSimulator(ABC):
         """Abstract method enforcing constructor parameters for specific tool"""
         raise NotImplementedError
 
+    @abstractmethod
     def getStateIds(self, *args, **kwargs) -> list:
         """Abstract method for retrieving state identifiers"""
         raise NotImplementedError

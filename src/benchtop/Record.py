@@ -6,10 +6,12 @@ Class object for handling results.
 Author: Jonah R. Huggins
 
 """
+
+import uuid
 import logging
+
 import pandas as pd
 
-import utils as utils
 from ResultsCacher import ResultCache
 
 logging.basicConfig(
@@ -66,7 +68,7 @@ class Record:
                     identifier = measurement_df["datasetId"]\
                         [measurement_df["simulationConditionId"] == condition_id].values[0]
                 else:
-                    identifier = utils.identifier_generator()
+                    identifier = self.__identifier_generator()
 
                 results[identifier] = {
                     "conditionId": condition_id,
@@ -116,3 +118,12 @@ class Record:
 
         return condition, cell, condition_id
 
+    def __identifier_generator(self):
+        """Generates unique identifier for each simulation in experiment
+        output:
+            returns the unique identifier
+        """
+
+        identifier = str(uuid.uuid4())
+
+        return identifier

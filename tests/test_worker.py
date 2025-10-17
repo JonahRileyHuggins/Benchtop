@@ -2,10 +2,10 @@ import os
 import sys
 from multiprocessing import Manager
 from unittest.mock import patch, MagicMock
-sys.path.append(os.path.dirname(__file__))
 
 import pandas as pd
 
+sys.path.append(os.path.dirname(__file__))
 from src.benchtop.Worker import Worker
 
 cache_dir = "./tests/data/.cache/"
@@ -161,9 +161,6 @@ def test_get_simulation_time():
     assert time == 48, (
         f"Expected time returned 48, got {time}"
     )
-
-from unittest.mock import MagicMock
-import pandas as pd
 
 def test_model_state_assignment():
     # --- Setup ---

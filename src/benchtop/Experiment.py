@@ -72,7 +72,7 @@ class Experiment:
         self.loader = FileLoader(petab_yaml)
         self.loader._petab_files()
 
-        self.details = self.loader.config
+        self.details = self.loader.config ### slate to remove self-storage
 
         self.name = self.details.problems[0].name or None
 

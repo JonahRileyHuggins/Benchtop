@@ -86,7 +86,7 @@ class Worker:
 
             condition, cell, condition_id = self.record.condition_cell_id(
                 rank_task=task,
-                conditions_df=self.record.problem.caondition_files[0]
+                conditions_df=self.record.problem.condition_files[0]
             )
 
             logger.info(f"{rank} running {condition_id} for replicate {cell}")
@@ -134,7 +134,6 @@ class Worker:
                 measurement_df['simulationConditionId'] == condition_id
             ]
 
-
             if not precondition_matches.empty:
                 # Use iloc[0] to safely get the first preequilibrationConditionId
                 precondition_id = precondition_matches['preequilibrationConditionId'].iloc[0]
@@ -171,7 +170,11 @@ class Worker:
         for name, state in zip(names, states):
             if name in blacklist_names:
                 continue
+            for name, state in zip(names, states):
+                if not isinstance(name, str):
+                    raise TypeError(f"Invalid component name type: {name} ({type(name)})")
             logger.debug(f"Modifying variable {name} with value {state}")
+            
             try:
 
                 self.simulator.modify(name, state)

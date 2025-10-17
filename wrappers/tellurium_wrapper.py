@@ -36,6 +36,7 @@ class WrapTellurium(AbstractSimulator):
     def load(self, *args, **kwargs):
         # default path for testing
         sbml_path = "LR-model.xml"
+        solver = "rk45"
         # If a nested tuple is passed, unpack it
         for arg in args:
             logger.debug(f"Interpreting argument: {arg}")
@@ -46,9 +47,11 @@ class WrapTellurium(AbstractSimulator):
                 if extension == ".xml":
 
                     sbml_path = str(pathlib.Path(arg).expanduser().resolve())
+            if arg == "gillespie":
+                solver = arg
 
         self.tool = te.loadSBMLModel(sbml_path)
-        self.tool.setIntegrator('rk45')
+        self.tool.setIntegrator(solver)
         integrator = self.tool.getIntegrator()
         integrator.absolute_tolerance = 1e-8
         integrator.relative_tolerance = 1e-6
