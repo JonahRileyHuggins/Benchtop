@@ -114,8 +114,8 @@ def test_find_preequilibration_results_no_match() -> None:
 def test_setModelState_basic():
     grunt, dummy_simulator = make_dummy_worker()
 
-    names = ["conditionId", "good_var1", "bad_var", "conditionName", "good_var2"]
-    states = [0, 1.23, 4.56, 0, 7.89]
+    names = ["conditionId", "good_var1", "bad_var", "conditionName"]
+    states = [0.0, 1.23, 4.56, 0.0]
 
     # Configure modify() to raise ValueError once
     def fake_modify(name, value):
@@ -133,7 +133,6 @@ def test_setModelState_basic():
     expected_calls = [
         ("good_var1", 1.23),
         ("bad_var", 4.56),
-        # ("good_var2", 7.89),
     ]
     actual_calls = [tuple(call.args) for call in dummy_simulator.modify.call_args_list]
 

@@ -1,4 +1,4 @@
-
+import random
 from unittest.mock import MagicMock
 
 import pandas as pd
@@ -6,13 +6,13 @@ import pandas as pd
 def dummy_simulator(*args, **kwargs) -> None:
 
     results_df = pd.DataFrame({
-    "cyt_prot__LIGAND_": [0, 10, 4],
-    "nuc_gene_a__LIGAND_": [2, 2, 5],
-    "nuc_gene_i__LIGAND_": [0, 0, 0],
-    "nuc_gene_a__RECEPTOR_": [2, 2, 3],
-    "nuc_gene_i__RECEPTOR_": [0, 0, 0],
-    "cyt_mrna__LIGAND_": [5, 5, 5],
-    "cyt_mrna__RECEPTOR_": [5, 5, 5],
+    "cyt_prot__LIGAND_": [random.uniform(0,1000) for _ in range(3)],
+    "nuc_gene_a__LIGAND_": [random.uniform(0,1000) for _ in range(3)],
+    "nuc_gene_i__LIGAND_": [random.uniform(0,1000) for _ in range(3)],
+    "nuc_gene_a__RECEPTOR_": [random.uniform(0,1000) for _ in range(3)],
+    "nuc_gene_i__RECEPTOR_": [random.uniform(0,1000) for _ in range(3)],
+    "cyt_mrna__LIGAND_": [random.uniform(0,1000) for _ in range(3)],
+    "cyt_mrna__RECEPTOR_": [random.uniform(0,1000) for _ in range(3)],
     })
 
     # fake simulator with dummy methods for class

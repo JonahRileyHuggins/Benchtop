@@ -25,13 +25,9 @@ class ResultCache:
 
         self.cache_index_path = os.path.join(self.cache_dir, "cache_index.json")
         
-        if not load_index:
+        if load_index == False:
             if results_dict is None:
                 raise ValueError("results_dict must be provided when load_index=False")
-
-            # Initialize new cache index with 'complete' flags
-            for key in results_dict.keys():
-                results_dict[key]['complete'] = False
 
             self.results_dict = results_dict
 

@@ -183,7 +183,7 @@ class Experiment:
             results_path = os.path.join(results_directory, f"{self.name}.pkl")
 
         with open(results_path, "wb") as f:
-            pkl.dump(self.record.results_dict, f)
+            pkl.dump(self.record.cache.results_dict, f)
 
         self.record.cache.delete_cache()
 
@@ -195,7 +195,7 @@ class Experiment:
         output:
             returns the results of the SPARCED model unit test simulation
         """
-        self.record.results_dict = obs.ObservableCalculator(self).run()
+        self.record.cache.results_dict = obs.ObservableCalculator(self).run()
 
         self.save_results(args)
 
@@ -214,7 +214,7 @@ class Experiment:
 
         # --- 1. Identify incomplete jobs ---
         incomplete = [
-            f"{self.record.results_dict[key]['conditionId']}+{self.record.results_dict[key]['cell']}"
+            f"{self.record.cache.results_dict[key]['conditionId']}+{self.record.cache.results_dict[key]['cell']}"
             for key in cache_index.keys()
             if not cache_index[key]['complete']
         ]

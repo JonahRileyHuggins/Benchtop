@@ -144,5 +144,5 @@ def test_task_organization():
     # 1 preequilibration round 
     # Should be 12 entries, so 2 rounds?
 
-    assert rounds == 2, f"Number of rounds expected: 12, returned: {rounds}"
+    assert rounds == 2, f"Number of rounds expected: 2, returned: {rounds}"
 

@@ -33,16 +33,13 @@ class Record:
         self.problem = problem
 
         # --- initial dictionary, replaced if cached index present ---
-        self.results_dict = self.__results_dictionary()
+        results_dict = self.__results_dictionary()
 
         self.cache = ResultCache(
-            results_dict = self.results_dict,
+            results_dict = results_dict,
             cache_dir=cache_dir, 
             load_index=load_index
             )
-        
-        # --- restores results dictionary if cache index present ---
-        self.results_dict = self.cache.results_dict
     
     def __results_dictionary(self) -> dict:
         """Create an empty dictionary for storing results
@@ -72,7 +69,8 @@ class Record:
 
                 results[identifier] = {
                     "conditionId": condition_id,
-                    "cell": cell
+                    "cell": cell,
+                    "complete": False
                 }
 
         return results
@@ -84,9 +82,9 @@ class Record:
             ) -> pd.DataFrame:
         """Indexes results dictionary on condition id, returns results"""
         # results keys should all be species names paired with single numpy arrays. 
-        for key in self.results_dict.keys():
-            if str(self.results_dict[key]['conditionId']) == str(condition_id)\
-                and str(self.results_dict[key]['cell']) == str(cell):
+        for key in self.cache.results_dict.keys():
+            if str(self.cache.results_dict[key]['conditionId']) == str(condition_id)\
+                and str(self.cache.results_dict[key]['cell']) == str(cell):
                 logger.debug(f"results found for {condition_id} and cell {cell}")
                 return self.cache.load(key)
             

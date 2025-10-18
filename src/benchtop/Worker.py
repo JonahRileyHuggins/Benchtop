@@ -102,7 +102,7 @@ class Worker:
 
             stop_time = self.__get_simulation_time(condition)
             results_array = self.simulator.simulate(start, stop_time, step)
-
+            
             results = pd.DataFrame(results_array)
             results['time'] = np.arange(int(start), stop_time+step, int(step))
 
@@ -170,9 +170,8 @@ class Worker:
         for name, state in zip(names, states):
             if name in blacklist_names:
                 continue
-            for name, state in zip(names, states):
-                if not isinstance(name, str):
-                    raise TypeError(f"Invalid component name type: {name} ({type(name)})")
+            if not isinstance(name, str):
+                raise TypeError(f"Invalid component name type: {name} ({type(name)})")
             logger.debug(f"Modifying variable {name} with value {state}")
             
             try:
@@ -214,17 +213,17 @@ class Worker:
         cell = parcel["cell"]
         results = parcel['results']
 
-        for key in self.record.results_dict.keys():
+        for key in self.record.cache.results_dict.keys(): 
 
-            if self.record.results_dict[key]['conditionId'] == condition_id \
-                and self.record.results_dict[key]['cell'] == cell:
+            if self.record.cache.results_dict[key]['conditionId'] == condition_id \
+                and self.record.cache.results_dict[key]['cell'] == cell: 
 
                 # Per-process safety check
                 self.lock.acquire()
 
                 # Save results to temporary cache directory
                 self.record.cache.save(key=key, df=results)
-                self.record.cache.update_cache_index(key=key, status=True)
+                self.record.cache.update_cache_index(key=key, status=True) 
 
                 # release for other processes to access
                 self.lock.release()
