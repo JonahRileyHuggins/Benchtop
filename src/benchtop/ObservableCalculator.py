@@ -24,7 +24,7 @@ class ObservableCalculator:
 
     def __init__(self, parent):
 
-        self.results_dict = parent.record.results_dict
+        self.results_dict = parent.record.cache.results_dict
 
         self.cache = parent.record.cache
 
