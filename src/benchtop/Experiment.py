@@ -80,7 +80,7 @@ class Experiment:
 
         logger.info("Loading Experiment %s details from %s", self.name, self.petab_yaml)
 
-        # recieves one or more SBML files
+        # add one or more SBML files
         self.sbml_list = self.__sbml_getter()
 
         # Loads jobs directory with results_dict class member
@@ -109,6 +109,9 @@ class Experiment:
 
         logger.debug(f"Starting in-silico experiment across {self.size} cores.")
 
+        # Add sbmls from config to args tuple
+        args = self.__add_sbml_to_args(args=args)
+
         num_rounds, job_index = self.org.task_organization(
             self.loader.problems[0].measurement_files[0],
             self.cell_count
@@ -122,10 +125,6 @@ class Experiment:
                 round_i=round_i
             )
 
-            # Lock ensures sequential read/write access for shared files
-            # with mp.Manager() as manager:
-            #     lock = manager.Lock()
-
             logger.debug(f"Tasks for round: {tasks}")
 
             worker_args = [
@@ -134,7 +133,7 @@ class Experiment:
                     self.record,
                     simulator,
                     # lock,
-                    *args,
+                    args, # !<-- Need to add sbml list back to args
                     start,
                     step, 
                 ) 
@@ -173,11 +172,20 @@ class Experiment:
 
         assert remaining == [], f"Error in simulation task updates: {remaining}"
 
+    def __add_sbml_to_args(self, args: tuple) -> tuple:
+        """Adds sbml files stored in self to args tuple"""
+        args_list = list(args)
+        for item in self.sbml_list:
+            args_list.append(item)
+        
+        # padding to ensure single argument parameters get passed as proper structure
+        args_list.extend('\0')
+        return tuple(args_list)
 
     def __sbml_getter(self) -> list:
         """Retrieves all sbml files defined in PEtab configuration file"""
         sbml_file_list = [
-            fp
+            os.path.join(os.path.dirname(self.petab_yaml), fp)
             for problem in self.loader.problems
             if hasattr(problem, "sbml_files")
             for fp in problem.sbml_files

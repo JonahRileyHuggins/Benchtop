@@ -95,7 +95,11 @@ class Worker:
             )
 
             logger.info(f"{rank} running {condition_id} for replicate {cell}")
-            logger.debug(f"Conditions for {condition_id} are:  {condition.keys()}")
+            logger.debug(
+                f"Conditions for {condition_id} are: "
+                f"{[f'{i}: {j}' for i, j in zip(condition.index, condition.values)]}"
+            )
+
 
             state_ids = self.simulator.getStateIds()
 
@@ -174,6 +178,11 @@ class Worker:
     def __setModelState(self, names: list, states: list) -> None:
         """Set model state with list of floats"""
         
+        if len(names) != len(states):
+                raise ValueError(
+                    f"Length mismatch: {len(names)} names vs {len(states)} states"
+                )
+
         # Drop unwanted metadata keys
         blacklist_names = ["conditionId", "conditionName"]
 
@@ -184,12 +193,7 @@ class Worker:
                 raise TypeError(f"Invalid component name type: {name} ({type(name)})")
             logger.debug(f"Modifying variable {name} with value {state}")
             
-            try:
-
-                self.simulator.modify(name, state)
-
-            except ValueError as e: 
-                raise ValueError(f"ValueError while modifying {name}: {e}")
+            self.simulator.modify(name, state)
                 
         logger.debug("Updated model state")
 

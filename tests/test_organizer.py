@@ -50,7 +50,7 @@ def test_topological_sorter() -> None:
     m_df_no_preequib = pd.DataFrame({
 
         "preequilibrationConditionId": [None, None, None],
-        "simulationConditionId": ["primary_conditon1", "primary_condition2", "serum_starve"] # intentional order change
+        "simulationConditionId": ["primary_conditon1", "serum_starve", "primary_condition2"] # intentional order change
 
     })
 

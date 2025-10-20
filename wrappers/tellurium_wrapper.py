@@ -46,7 +46,7 @@ class WrapTellurium(AbstractSimulator):
 
                 if extension == ".xml":
 
-                    sbml_path = str(pathlib.Path(arg).expanduser().resolve())
+                    sbml_path = arg
             if arg == "gillespie":
                 solver = arg
 
@@ -95,4 +95,7 @@ class WrapTellurium(AbstractSimulator):
         Method for SingleCell simulator modify method
         """
         logger.debug(f"Assigning model state variable {component} to value {value}  ({type(value)})")
-        self.tool[component] = float(value)
+        try:
+            self.tool[component] = float(value)
+        except ValueError as e:
+            raise ValueError(f"Error in setting parameter value: {e}")

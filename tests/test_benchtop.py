@@ -23,7 +23,7 @@ def test_run() -> None:
     if os.path.exists(cache_path):
         shutil.rmtree(cache_path, ignore_errors=True)
 
-    config_path = "./tests/data/LR-benchmark.yaml"
+    config_path = os.path.abspath("./tests/data/LR-benchmark.yaml")
     experiment = Experiment(config_path, cache_dir=cache_path, cores=os.cpu_count(), verbose=True)
 
     cache_dir = os.path.join(os.path.dirname(config_path), '.cache')
@@ -31,8 +31,7 @@ def test_run() -> None:
     assert "cache_index.json" in os.listdir(cache_dir)
     assert len(experiment.record.cache.results_dict.keys()) == 9
 
-    sbml_path = os.path.abspath("./tests/data/LR-model.xml")
-    experiment.run(WrapTellurium, (sbml_path,), step = 1)
+    experiment.run(WrapTellurium, step = 1)
 
     assert len(os.listdir(cache_dir)) == 10 # 9 simulations + cache index JSON
     for key in experiment.record.cache.results_dict.keys():
@@ -45,38 +44,76 @@ def test_reassigning_all_species() -> None:
     if os.path.exists(cache_path):
         shutil.rmtree(cache_path, ignore_errors=True)
 
-    config_path = "./tests/data/LR-benchmark.yaml"
+    config_path = os.path.abspath(os.path.join(os.getcwd(), "./tests/data/LR-benchmark.yaml"))
+
     experiment = Experiment(config_path, cache_dir=cache_path, cores=1, verbose=False)
 
     # Construct Worker using MagicMock simulator type
-    with Manager() as manager:
-        lock = manager.Lock()
-        grunt = Worker(
-            task=None,
-            record=experiment.record,
-            simulator=WrapTellurium,
-            lock=lock,
-            args=(os.path.abspath("./tests/data/LR-model.xml"), ),
-            start=0.0,
-            step=30.0,
-        )
+    args = os.path.join(os.path.dirname(config_path), "LR-model.xml")
+    grunt = Worker(
+        task=None,
+        record=experiment.record,
+        simulator=WrapTellurium,
+        # lock=lock,
+        args=(args, ),
+        start=0.0,
+        step=30.0,
+    )
 
-        sbml_path = os.path.abspath("./tests/data/LR-model.xml")
-        grunt.simulator = WrapTellurium(sbml_path)
+    grunt.simulator = WrapTellurium(args)
 
-        # Get all species IDs from the model
-        species_ids = grunt.simulator.tool.getFloatingSpeciesIds()
-        assert len(species_ids) == 9, f"Expected 9 model species, got {len(species_ids)}"
-        new_vals = [0.0 for i in range(10)]
+    # Get all species IDs from the model
+    species_ids = grunt.simulator.tool.getFloatingSpeciesIds()
+    assert len(species_ids) == 9, f"Expected 9 model species, got {len(species_ids)}"
+    new_vals = [0.0 for i in range(len(species_ids))]
 
-        grunt._Worker__setModelState(species_ids, new_vals)
+    grunt._Worker__setModelState(species_ids, new_vals)
 
-        # Verify all species concentrations are now zero
-        for sid in species_ids:
-            val = grunt.simulator.tool[sid]
-            assert val == 0.0, f"Base tellurium did not reassign {sid} value properly (value={val})"
+    # Verify all species concentrations are now zero
+    for sid in species_ids:
+        val = grunt.simulator.tool[sid]
+        assert val == 0.0, f"Base tellurium did not reassign {sid} value properly (value={val})"
 
-        print("✅ All 9 model species successfully reassigned to 0.0 without error.")
+    print("✅ All 9 model species successfully reassigned to 0.0 without error.")
+
+def test_param_reassignment() -> None:
+    assert os.path.basename(os.getcwd()) == 'Benchtop'
+
+    cache_path = './tests/data/.cache'
+    if os.path.exists(cache_path):
+        shutil.rmtree(cache_path, ignore_errors=True)
+
+    config_path = os.path.abspath(os.path.join(os.getcwd(), "./tests/data/LR-benchmark.yaml"))
+    print("config_path:", config_path)
+    experiment = Experiment(config_path, cache_dir=cache_path, cores=1, verbose=False)
+
+    # Construct Worker using MagicMock simulator type
+    args = os.path.join(os.path.dirname(config_path), "LR-model.xml")
+    grunt = Worker(
+        task=None,
+        record=experiment.record,
+        simulator=WrapTellurium,
+        # lock=lock,
+        args=(args, ),
+        start=0.0,
+        step=30.0,
+    )
+
+    grunt.simulator = WrapTellurium(args)
+
+    # Get all species IDs from the model
+    param_ids = grunt.simulator.tool.getGlobalParameterIds()
+    assert len(param_ids) == 15, f"Expected 9 model species, got {len(param_ids)}"
+    new_vals = [1.0 for _ in range(len(param_ids))]
+
+    grunt._Worker__setModelState(param_ids, new_vals)
+
+    # Verify all species concentrations are now zero
+    for sid in param_ids:
+        val = grunt.simulator.tool[sid]
+        assert val == 1.0, f"Base tellurium did not reassign {sid} value properly (value={val})"
+
+    print("✅ All 15 model parameters successfully reassigned to 1.0 without error.")
 
 def test_results_dict_inheritance() -> None:
     """Verifies no method modifies results_dict object after initialization"""
@@ -95,7 +132,7 @@ def test_results_dict_inheritance() -> None:
     initial_ids = list(experiment.record.cache.results_dict.keys())
 
     # 3. Run generic experiment
-    experiment.run(dummy_simulator, ("foobar",))
+    experiment.run(dummy_simulator)
 
     # 4. Inspect difference between different child class results_dict members
     # 4.1 Changes to original member
@@ -138,7 +175,7 @@ def test_results_saving() -> None:
         rand_conds_df.loc[idx, 'cyt_prot__LIGAND__RECEPTOR_'] = 0
 
     # run dummy simulator, which returns random values:
-    experiment.run(dummy_simulator, ("foobar",))
+    experiment.run(dummy_simulator)
     # experiment.run(WrapTellurium, (sbml_path, ), step = 10)
 
     # Collect final simulation outputs
@@ -168,4 +205,4 @@ def test_results_saving() -> None:
     duplicates = verify_df.duplicated().sum()
     assert duplicates == 0, f"Found {duplicates} duplicate final results; results are being overwritten."
 
-    print(f"✅ {len(verify_df)} unique stochastic results verified — no overwriting detected.")
+    print(f"✅ {len(verify_df)} result integrity verified — no overwriting detected.")

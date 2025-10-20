@@ -15,15 +15,17 @@ logger = logging.getLogger(__name__)
 os.chdir('../')
 
 def run_tests() -> None:
+
+    import test_benchtop
+    test_benchtop.test_param_reassignment()
+    test_benchtop.test_reassigning_all_species()
+    test_benchtop.test_run()
+    test_benchtop.test_results_dict_inheritance()
+    test_benchtop.test_results_saving()
+
     import test_cache
     test_cache.test_cache_constructor()
     test_cache.test_load_prior()
-
-    import test_benchtop
-    test_benchtop.test_results_dict_inheritance()
-    test_benchtop.test_results_saving()
-    test_benchtop.test_run()
-    # test_benchtop.test_reassigning_all_species()
 
     import test_worker
     test_worker.test_worker_constructor()
