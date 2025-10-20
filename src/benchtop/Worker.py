@@ -28,7 +28,6 @@ def worker_method(
         task: str, 
         record: Record,
         simulator: AbstractSimulator,
-        # lock: mp.Lock,
         args: tuple = (), 
         start: float = 0.0, 
         step: float = 30.0
@@ -38,7 +37,6 @@ def worker_method(
     Worker(task, 
            record, 
            simulator, 
-        #    lock, 
            args, start, step)
     return None  # avoid returning the Worker itself
 
@@ -49,7 +47,6 @@ class Worker:
             task: str, 
             record: Record,
             simulator: AbstractSimulator,
-            # lock: mp.Lock, 
             args: tuple = (), 
             start: float = 0.0, 
             step: float = 30.0,
@@ -99,7 +96,6 @@ class Worker:
                 f"Conditions for {condition_id} are: "
                 f"{[f'{i}: {j}' for i, j in zip(condition.index, condition.values)]}"
             )
-
 
             state_ids = self.simulator.getStateIds()
 
@@ -232,15 +228,9 @@ class Worker:
             if str(self.record.cache.results_dict[key]['conditionId']) == str(condition_id) \
                 and str(self.record.cache.results_dict[key]['cell']) == str(cell): 
 
-                # Per-process safety check
-                # self.lock.acquire()
-
                 # Save results to temporary cache directory
                 self.record.cache.save(key=key, df=results)
-                # self.record.cache.update_cache_index(key=key, status=True)
 
-                # release for other processes to access
-                # self.lock.release()
 
         # Saves individual simulation data in cache directory
 
