@@ -17,12 +17,19 @@ Output:
 # -----------------------Package Import & Defined Arguements-------------------#
 import os
 import sys
+import logging
 import importlib.util
 
 import pandas as pd
 
 sys.path.append(f'{os.path.dirname(os.path.dirname(__file__))}/src/benchtop/')
 from AbstractSimulator import AbstractSimulator
+
+logging.basicConfig(
+    level=logging.DEBUG, # Overriden if Verbose Arg. True
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 # Absolute path to compiled extension (pySingleCell*.so file)
 so_path = os.path.join(
@@ -86,37 +93,30 @@ class SingleCell(AbstractSimulator):
             self, 
             component: str, 
             value: int | float
-            ):
+        ):
         """
-        Method for SingleCell simulator modify method
+        Method for SingleCell simulator modify method with debug/error checks
         """
-def modify(
-        self, 
-        component: str, 
-        value: int | float
-    ):
-    """
-    Method for SingleCell simulator modify method with debug/error checks
-    """
 
-    # Check type of component
-    if not isinstance(component, str):
-        raise TypeError(f"Expected component to be str, got {type(component)}: {component}")
+        # Check type of component
+        if not isinstance(component, str):
+            raise TypeError(f"Expected component to be str, got {type(component)}: {component}")
 
-    # Check type of value
-    if not isinstance(value, (int, float)):
-        raise TypeError(f"Expected value to be int or float, got {type(value)}: {value}")
+        # Check type of value
+        if not isinstance(value, (int, float)):
+            raise TypeError(f"Expected value to be int or float, got {type(value)}: {value}")
 
-    # Optionally check for NaN or Inf
-    if isinstance(value, float):
-        if value != value:  # NaN check
-            raise ValueError(f"Value for {component} is NaN")
-        if value == float('inf') or value == float('-inf'):
-            raise ValueError(f"Value for {component} is infinite: {value}")
+        # Optionally check for NaN or Inf
+        if isinstance(value, float):
+            if value != value:  # NaN check
+                raise ValueError(f"Value for {component} is NaN")
+            if value == float('inf') or value == float('-inf'):
+                raise ValueError(f"Value for {component} is infinite: {value}")
 
-    try:
-        self.tool.modify(component, float(value))
-    except Exception as e:
-        raise RuntimeError(f"Failed to modify component '{component}' with value {value}") from e
+        try:
+            self.tool.modify(component, float(value))
+            logger.debug(f"Modified parameter '{component}' to {value}")
+        except Exception as e:
+            raise RuntimeError(f"Failed to modify component '{component}' with value {value}") from e
 
 
