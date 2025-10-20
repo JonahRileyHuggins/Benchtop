@@ -185,12 +185,12 @@ class Experiment:
     def __sbml_getter(self) -> list:
         """Retrieves all sbml files defined in PEtab configuration file"""
         sbml_file_list = [
-            os.path.join(os.path.dirname(self.petab_yaml), fp)
+            fp
             for problem in self.loader.problems
             if hasattr(problem, "sbml_files")
             for fp in problem.sbml_files
         ]
-
+        
         return sbml_file_list
 
     def save_results(self, args) -> None:

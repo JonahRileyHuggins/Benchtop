@@ -6,7 +6,7 @@ Author: Jonah R. Huggins
 
 Description: [**PROTOTYPE**] entrypoint for model simulation. Parsing and wrapper \n
 function that takes model attributes, performs basic data handling, and passes \n
-initial model state array to C++ simulation engine  
+initial model state array to C++ simulation engine
 
 Input: Simulation Settings
 
@@ -20,6 +20,7 @@ import sys
 import logging
 import importlib.util
 
+import numpy as np
 import pandas as pd
 
 sys.path.append(f'{os.path.dirname(os.path.dirname(__file__))}/src/benchtop/')
@@ -62,8 +63,12 @@ class SingleCell(AbstractSimulator):
 
     def load(self,*args, **kwargs) -> SC:
         """Meets parent class loader method for SingleCell loader"""
-        
-        self.tool = SC(*args)
+        sbml_list = []
+        for item in args:
+            if os.path.exists(item):
+                sbml_list.append(item)
+        print(sbml_list)
+        self.tool = SC(*sbml_list)
 
     def getStateIds(self, *args, **kwargs) -> list:
         return self.tool.getGlobalSpeciesIds()
@@ -103,8 +108,8 @@ class SingleCell(AbstractSimulator):
             raise TypeError(f"Expected component to be str, got {type(component)}: {component}")
 
         # Check type of value
-        if not isinstance(value, (int, float)):
-            raise TypeError(f"Expected value to be int or float, got {type(value)}: {value}")
+        if not isinstance(value, (int, float, np.int64)):
+            raise TypeError(f"Expected {component} value to be int or float, got {type(value)}: {value}")
 
         # Optionally check for NaN or Inf
         if isinstance(value, float):
