@@ -90,7 +90,6 @@ class Experiment:
             load_index=load_index
             )
 
-
     def run(self,
             simulator: AbstractSimulator,
             *args, 
@@ -124,27 +123,57 @@ class Experiment:
             )
 
             # Lock ensures sequential read/write access for shared files
-            with mp.Manager() as manager:
-                lock = manager.Lock()
+            # with mp.Manager() as manager:
+            #     lock = manager.Lock()
 
-                logger.debug(f"Tasks for round: {tasks}")
+            logger.debug(f"Tasks for round: {tasks}")
 
-                worker_args = [
-                    (
-                        task, 
-                        self.record,
-                        simulator,
-                        lock,
-                        *args,
-                        start,
-                        step, 
-                    ) 
-                    for task in tasks]
-                
-                # split workload across processes:
-                with mp.Pool(processes=self.size) as pool:
-                    pool.starmap(worker_method, worker_args)
+            worker_args = [
+                (
+                    task, 
+                    self.record,
+                    simulator,
+                    # lock,
+                    *args,
+                    start,
+                    step, 
+                ) 
+                for task in tasks]
+            
+            # split workload across processes:
+            with mp.Pool(processes=self.size) as pool:
+                pool.starmap(worker_method, worker_args)
                         
+            # change simulation-complete status to `True`
+            self.__update_cache_for_round(tasks)
+
+    def __update_cache_for_round(self, task_list: list) -> None:
+        """Receives task list for current round,
+        splits task into conditionID and cell number,
+        updates results_dict[complete] with True."""
+        
+        remaining = []
+
+        for task in task_list:
+            if task is None:
+                continue
+
+            condition_id, cell = task.split("+")
+
+            matched = False
+            for key, record in self.record.cache.results_dict.items():
+                if str(record['conditionId']) == str(condition_id) \
+                and str(record['cell']) == str(cell):
+                    self.record.cache.update_cache_index(key=key, status=True)
+                    matched = True
+                    break
+
+            if not matched:
+                remaining.append(task)
+
+        assert remaining == [], f"Error in simulation task updates: {remaining}"
+
+
     def __sbml_getter(self) -> list:
         """Retrieves all sbml files defined in PEtab configuration file"""
         sbml_file_list = [

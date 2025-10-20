@@ -28,14 +28,18 @@ def worker_method(
         task: str, 
         record: Record,
         simulator: AbstractSimulator,
-        lock: mp.Lock,
+        # lock: mp.Lock,
         args: tuple = (), 
         start: float = 0.0, 
         step: float = 30.0
             ):
     """Child process method for avoiding Multiprocessing from serializing Worker object"""
     # Instantiate and run inside the child process
-    Worker(task, record, simulator, lock, args, start, step)
+    Worker(task, 
+           record, 
+           simulator, 
+        #    lock, 
+           args, start, step)
     return None  # avoid returning the Worker itself
 
 class Worker:
@@ -45,7 +49,7 @@ class Worker:
             task: str, 
             record: Record,
             simulator: AbstractSimulator,
-            lock: mp.Lock, 
+            # lock: mp.Lock, 
             args: tuple = (), 
             start: float = 0.0, 
             step: float = 30.0,
@@ -58,7 +62,7 @@ class Worker:
         args : tuple, optional
             Extra arguments to pass to function.
         """
-        self.lock = lock
+        # self.lock = lock
         self.record = record
 
         # Store an instance of the simulator in worker class
@@ -84,6 +88,7 @@ class Worker:
 
                 return # No need to save anything if no simulation task
 
+            # Retrieve worker task:
             condition, cell, condition_id = self.record.condition_cell_id(
                 rank_task=task,
                 conditions_df=self.record.problem.condition_files[0]
@@ -94,22 +99,27 @@ class Worker:
 
             state_ids = self.simulator.getStateIds()
 
+            # Overwrite base-state with dependency final values
             precondition_results = self.__extract_preequilibration_results(condition_id, cell)
             if precondition_results:
                 self.__setModelState(state_ids, precondition_results)
 
+            # Assign conditions of Worker task to model
             self.__setModelState(condition.keys(), condition.values.tolist())
 
+            # Retrieve simulation duration, simulate
             stop_time = self.__get_simulation_time(condition)
             results_array = self.simulator.simulate(start, stop_time, step)
             
             results = pd.DataFrame(results_array)
             results['time'] = np.arange(int(start), stop_time+step, int(step))
 
+            # package into dictionary !!! <-- remnant from code dev
             parcel = self.__package_results(results, condition_id, cell)
 
             logger.info(f"{rank} finished {condition_id} for cell {cell}")
 
+            # Save code to .cache directory
             self.__cache_results(parcel)
 
             logger.info(f"Rank {rank} has completed {condition_id} for process {cell}")
@@ -157,7 +167,7 @@ class Worker:
                         if "time" in precondition_df.columns: 
                             precondition_df = precondition_df.drop("time", axis = 1)
 
-                        precondition_results = precondition_df.iloc[-1, :].to_list()
+                        precondition_results = precondition_df.iloc[-1].to_list()
 
         return precondition_results
     
@@ -215,20 +225,20 @@ class Worker:
 
         for key in self.record.cache.results_dict.keys(): 
 
-            if self.record.cache.results_dict[key]['conditionId'] == condition_id \
-                and self.record.cache.results_dict[key]['cell'] == cell: 
+            if str(self.record.cache.results_dict[key]['conditionId']) == str(condition_id) \
+                and str(self.record.cache.results_dict[key]['cell']) == str(cell): 
 
                 # Per-process safety check
-                self.lock.acquire()
+                # self.lock.acquire()
 
                 # Save results to temporary cache directory
                 self.record.cache.save(key=key, df=results)
-                self.record.cache.update_cache_index(key=key, status=True) 
+                # self.record.cache.update_cache_index(key=key, status=True)
 
                 # release for other processes to access
-                self.lock.release()
+                # self.lock.release()
 
-        return # Saves individual simulation data in cache directory
+        # Saves individual simulation data in cache directory
 
     def __package_results(
             self,

@@ -89,9 +89,7 @@ class Record:
                 return self.cache.load(key)
             
         logger.error(f"No prior results found for {condition_id} at cell {cell}")
-        
-        
-            
+                    
     def condition_cell_id(
         self,
         rank_task: str, 

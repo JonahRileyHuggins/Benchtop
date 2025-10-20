@@ -120,6 +120,7 @@ class WrapSPARCED(AbstractSimulator):
         results_df = pd.concat([dfT, dfS, dfG], axis=1)
 
         return results_df
+    
     def modify(
             self, 
             component: str, 

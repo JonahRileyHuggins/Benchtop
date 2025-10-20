@@ -48,19 +48,19 @@ def make_dummy_worker():
         return_value=(series, "1", "primary-condition")
     )
 
-    with Manager() as manager:
-        lock = manager.Lock()
+    # with Manager() as manager:
+    #     lock = manager.Lock()
 
-        # Construct Worker using MagicMock simulator type
-        grunt = Worker(
-            task="primary-condition+1",
-            record=dummy_record,
-            simulator=dummy_simulator,
-            lock=lock,
-            args="dummy_path.xml",
-            start=0.0,
-            step=30.0,
-        )
+    # Construct Worker using MagicMock simulator type
+    grunt = Worker(
+        task="primary-condition+1",
+        record=dummy_record,
+        simulator=dummy_simulator,
+        # lock=lock,
+        args="dummy_path.xml",
+        start=0.0,
+        step=30.0,
+    )
 
     assert grunt.simulator is None
     
