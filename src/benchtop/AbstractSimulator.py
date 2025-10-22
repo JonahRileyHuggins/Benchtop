@@ -32,11 +32,6 @@ class AbstractSimulator(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def getStateIds(self, *args, **kwargs) -> list:
-        """Abstract method for retrieving state identifiers"""
-        raise NotImplementedError
-
-    @abstractmethod
     def modify(self):
         """
         Abstract method that must be implemented in child classes.

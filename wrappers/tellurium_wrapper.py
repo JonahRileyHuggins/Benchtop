@@ -58,10 +58,6 @@ class WrapTellurium(AbstractSimulator):
         integrator.maximum_bisect = 10
         integrator.max_steps = 1e6
 
-
-    def getStateIds(self, *args, **kwargs) -> list:
-        return self.tool.getFloatingSpeciesIds()
-
     def simulate(self, start, stop, step) -> pd.DataFrame:
         """Primary simulation function using hybrid stochastic-deterministic method
 

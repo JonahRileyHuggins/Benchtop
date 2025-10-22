@@ -97,12 +97,13 @@ class Worker:
                 f"{[f'{i}: {j}' for i, j in zip(condition.index, condition.values)]}"
             )
 
-            state_ids = self.simulator.getStateIds()
-
             # Overwrite base-state with dependency final values
             precondition_results = self.__extract_preequilibration_results(condition_id, cell)
             if precondition_results:
-                self.__setModelState(state_ids, precondition_results)
+                self.__setModelState(
+                    list(precondition_results.keys()), 
+                    list(precondition_results.values())
+                )
 
             # Assign conditions of Worker task to model
             self.__setModelState(condition.keys(), condition.values.tolist())
@@ -128,7 +129,7 @@ class Worker:
             self, 
             condition_id: str, 
             cell: int
-            ) -> list:
+            ) -> dict:
         """
         Find if a given condition has a preequilibration. Pulls from results dictionary
         final timepoint array.
@@ -136,7 +137,7 @@ class Worker:
     
         # For now, only supporting one problem per file
         measurement_df = self.record.problem.measurement_files[0]
-        precondition_results = []
+        precondition_dict = {}
 
         if 'preequilibrationConditionId' in measurement_df.columns:
             # Filter matching simulationConditionId
@@ -168,8 +169,12 @@ class Worker:
                             precondition_df = precondition_df.drop("time", axis = 1)
 
                         precondition_results = precondition_df.iloc[-1].to_list()
+                        precondition_keys = list(precondition_df.columns)
 
-        return precondition_results
+                        # convert to dict to maintain order of results to keys:
+                        precondition_dict = dict(zip(precondition_keys,precondition_results))
+
+        return precondition_dict
     
     def __setModelState(self, names: list, states: list) -> None:
         """Set model state with list of floats"""

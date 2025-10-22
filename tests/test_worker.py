@@ -100,8 +100,8 @@ def test_find_preequilibration_results() -> None:
     with patch.object(grunt.record, "results_lookup", fake_results_lookup):
         results = grunt._Worker__extract_preequilibration_results(cond_id, cell_num)
 
-    assert isinstance(results, list)
-    assert results == [2.0, 4.0]
+    assert isinstance(results, dict)
+    assert list(results.values()) == [2.0, 4.0]
 
 def test_find_preequilibration_results_no_match() -> None:
     """Ensure an empty list is returned when no preequilibration condition exists."""
@@ -109,7 +109,7 @@ def test_find_preequilibration_results_no_match() -> None:
 
     with patch.object(grunt.record, "results_lookup", lambda *_: None):
         results = grunt._Worker__extract_preequilibration_results("heterogenize", 1)
-    assert results == [], "Should return empty list when no valid preequilibration condition."
+    assert results == {}, "Should return empty list when no valid preequilibration condition."
 
 def test_setModelState_basic():
     grunt, dummy_simulator = make_dummy_worker()

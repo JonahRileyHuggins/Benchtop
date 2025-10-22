@@ -70,9 +70,6 @@ class SingleCell(AbstractSimulator):
         print(sbml_list)
         self.tool = SC(*sbml_list)
 
-    def getStateIds(self, *args, **kwargs) -> list:
-        return self.tool.getGlobalSpeciesIds()
-
     def simulate(self, start, stop, step) -> pd.DataFrame:
         """Primary simulation function using hybrid stochastic-deterministic method
 
