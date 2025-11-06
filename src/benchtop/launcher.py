@@ -18,7 +18,7 @@ from types import SimpleNamespace
 sys.path.append(os.path.dirname(__file__))
 from Experiment import Experiment
 
-sys.path.append(f'{__file__}/../../')
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from wrappers.SingleCell import SingleCell
 logging.basicConfig(
     level=logging.INFO, # Overriden if Verbose Arg. True
