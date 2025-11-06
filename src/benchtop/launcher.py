@@ -101,12 +101,11 @@ class Experimentalist:
             verbose=self.args.verbose
             )
 
-        experiment.run(SingleCell, *self.args.sbml)
+        experiment.run(SingleCell)
 
         logger.debug("Closed simulation method successfully.")
 
         if self.args.No_Observables == True:
-            experiment.save_results(self.args)
             logger.debug("Saved Results successfully.")
 
         else:
