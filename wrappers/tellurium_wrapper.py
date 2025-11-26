@@ -36,7 +36,7 @@ class WrapTellurium(AbstractSimulator):
     def load(self, *args, **kwargs):
         # default path for testing
         sbml_path = "LR-model.xml"
-        solver = "rk45"
+        solver = "cvodes"
         # If a nested tuple is passed, unpack it
         for arg in args:
             logger.debug(f"Interpreting argument: {arg}")
