@@ -271,13 +271,15 @@ class ObservableCalculator:
             return observable_answer
 
         exp_time = self.measurement_df["time"].unique()
-
         time = dataset['time']
 
-        sim_equivalent_indicies = self._get_exp_time_indicies(exp_time, time)
+        sim_indices = self._get_exp_time_indicies(exp_time, time)
+        
+        # Sort indices to ensure ascending order of simulation time
+        sorted_indices = np.sort(sim_indices)
 
-        # Reduce the observable_answer to only the timepoints in the experimental data
-        observable_answer = observable_answer[sim_equivalent_indicies]
+        # Reduce observable_answer to these indices
+        observable_answer = observable_answer[sorted_indices]
 
         return observable_answer
 
