@@ -56,53 +56,60 @@ class Organizer:
         rounds_to_complete = -(-len(delayed_list) // size)
 
         return rounds_to_complete, rank_jobs_directory
-
-    def topologic_sort(
-            self,
-            measurements_df: pd.DataFrame
-            ) -> list:
+    
+    def topologic_sort(self, measurements_df: pd.DataFrame) -> list:
         """
-        Given a DataFrame with columns
-        - 'simulationConditionId'
-        - 'preequilibrationConditionId'
-        return a list of unique simulationConditionIds in dependency order
-        (i.e. all pre‐equilibration conditions come before their dependents).
+        Deterministic topological sort for simulation conditions. Order maintained,
+        otehrwise, users would have to watch how they arrange conditions and pre-
+        -equilibrate conditions.
         """
 
         if 'preequilibrationConditionId' not in measurements_df.columns:
-            return measurements_df['simulationConditionId'].unique().tolist()   
-           
-        else:
-            # 1) Collect all nodes
-            nodes = set(measurements_df['simulationConditionId'].dropna()) \
-                | set(measurements_df['preequilibrationConditionId'].dropna())
-            
-            # 2) Build adjacency list and in‐degree map
-            succs = defaultdict(list)   # prerequisite → [dependents…]
-            indegree = {n: 0 for n in nodes}
-            
-            for _, row in measurements_df.dropna(subset=['preequilibrationConditionId']).iterrows():
-                pre = row['preequilibrationConditionId']
-                sim = row['simulationConditionId']
-                succs[pre].append(sim)
-                indegree[sim] += 1
-            
-            # 3) Kahn’s algorithm for topological sort
-            queue = deque(n for n, d in indegree.items() if d == 0)
-            ordered = []
-            
-            while queue:
-                n = queue.popleft()
-                ordered.append(n)
-                for m in succs[n]:
-                    indegree[m] -= 1
-                    if indegree[m] == 0:
-                        queue.append(m)
-            
-            if len(ordered) != len(nodes):
-                raise RuntimeError("Circular dependency detected among conditions!")
-            
-            return ordered
+
+            return measurements_df['simulationConditionId'].dropna().unique().tolist()
+
+        # ---- 1. Collect All nodes ----
+        sim_nodes = measurements_df['simulationConditionId'].dropna().unique().tolist()
+        pre_nodes = measurements_df['preequilibrationConditionId'].dropna().unique().tolist()
+
+        # Keep order stable by sorting
+        nodes = sorted(set(sim_nodes) | set(pre_nodes)) 
+
+        # ---- 2. Build adjacency + indegree ----
+        succs = defaultdict(list)
+        indegree = {n: 0 for n in nodes}
+
+        for _, row in measurements_df.dropna(subset=['preequilibrationConditionId']).iterrows():
+            pre = row['preequilibrationConditionId']
+            sim = row['simulationConditionId']
+
+            succs[pre].append(sim)
+            indegree[sim] += 1
+
+        # Make successor lists
+        for k in succs:
+            succs[k].sort()
+
+        # ---- 3. Kahn algorithm ----
+        queue = deque(sorted(n for n, d in indegree.items() if d == 0))
+        ordered = []
+
+        while queue:
+            n = queue.popleft()
+            ordered.append(n)
+
+            for m in succs[n]:
+                indegree[m] -= 1
+                if indegree[m] == 0:
+                    queue.append(m)
+
+            # queue stable after each insertion
+            queue = deque(sorted(queue))
+
+        if len(ordered) != len(nodes):
+            raise RuntimeError("Circular dependency detected among conditions!")
+
+        return ordered
 
     def delay_secondary_conditions(
             self,

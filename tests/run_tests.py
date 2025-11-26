@@ -43,6 +43,13 @@ def run_tests() -> None:
     test_organizer.test_total_tasks_empty_tasks()
     test_organizer.test_total_tasks_zero_cells()
     
+    import test_record
+    test_record.test_record_constructor()
+    test_record.test_results_lookup()
+
+    import test_obscalc
+    test_obscalc.test_obscalc_constructor()
+    test_obscalc.test_calculate_formula()
 
 if __name__ == '__main__':
 

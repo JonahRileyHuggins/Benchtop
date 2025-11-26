@@ -150,7 +150,7 @@ class ObservableCalculator:
         expression."""
 
         # List of values considered to mean "empty" or "skip"
-        acceptable_nulls = ['', None, 0, '0', float('nan'), np.nan]
+        acceptable_nulls = ['', None, 0, '0', float('nan'), np.nan, 'nan']
 
         # Check if formula is in the null-like set
         if formula in acceptable_nulls or (
@@ -159,7 +159,6 @@ class ObservableCalculator:
             return None
         
         species = self._get_valid_species(formula)
-        
         for variable in species:
             # At each iteration, the formula updates with each species array
             formula = self.swap_species_for_array(
@@ -289,7 +288,7 @@ class ObservableCalculator:
 
         sim_timepoint_indicies = []
 
-        for t in exp_time:
+        for t in np.sort(exp_time):
             closest_idx = np.argmin(np.abs(sim_time - t))
             sim_timepoint_indicies.append(closest_idx)
 

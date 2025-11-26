@@ -1,5 +1,7 @@
 observableId	preequilibrationConditionId	simulationConditionId	measurement	time
 blank		heterogenize	None	60
-R_gene_activity	heterogenize	primary-condition	None	60
+R_gene_activity	heterogenize	primary-condition	1	0
+R_gene_activity	heterogenize	primary-condition	20	30
+R_gene_activity	heterogenize	primary-condition		60
 LR-complex	heterogenize	primary-condition	None	60
-LR-complex	heterogenize	adjacent-primary		60
+LR-complex	heterogenize	adjacent-primary	None	60
