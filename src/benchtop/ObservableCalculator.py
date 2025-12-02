@@ -267,10 +267,17 @@ class ObservableCalculator:
         """
         # Ensure first that there is no experimental values in the group's measurement
         # before reducing the timepoints, if none are found, return the original
-        if group["measurement"].isna().all():
+        valid_rows = group.dropna(subset=["measurement"])
+        if valid_rows.empty:
             return observable_answer
 
-        exp_time = self.measurement_df["time"].unique()
+        exp_time = exp_time = np.sort(
+            valid_rows["time"]
+            .dropna()
+            .astype(float)
+            .unique()
+        )
+
         time = dataset['time']
 
         sim_indices = self._get_exp_time_indicies(exp_time, time)
@@ -313,10 +320,16 @@ class ObservableCalculator:
 
         time = dataset['time']
 
-        if group["measurement"].isna().all():
+        valid_rows = group.dropna(subset=["measurement"])
+        if valid_rows.empty:
             return time
 
-        exp_time = self.measurement_df["time"].unique()
+        exp_time = np.sort(
+                    valid_rows["time"]
+                    .dropna()
+                    .astype(float)
+                    .unique()
+                )
 
         sim_equivalent_indicies = self._get_exp_time_indicies(exp_time, time)
 
