@@ -19,12 +19,13 @@ license = {text = "GPL-2.0"}
 dependencies = [
     "numpy==2.2.4",
 	"pandas==2.3.1",
-	"pyyaml==6.0.2"
+	"pyyaml==6.0.2",
+	"tellurium==2.2.11.2"
 ]
 
 [project.optional-dependencies]
-yaml = [
-	"tellurium==2.2.11.2"
+amici = [
+	"amici==0.32.0"
 ]
 
 [tool.setuptools]
