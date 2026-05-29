@@ -1,4 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+script: ResultsCacher.py
+Author: Jonah R. Huggins
 
+Description: handles caching and retrieving results
+"""
+# -----------------------Package Import & Defined Arguements-------------------#
 import os
 import json
 import pickle

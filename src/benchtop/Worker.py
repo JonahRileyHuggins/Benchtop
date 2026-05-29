@@ -15,8 +15,8 @@ import multiprocessing as mp
 import numpy as np
 import pandas as pd
 
-from Record import Record
-from AbstractSimulator import AbstractSimulator
+from benchtop.Record import Record
+from benchtop.AbstractSimulator import AbstractSimulator
 
 logging.basicConfig(
     level=logging.DEBUG, # Overriden if Verbose Arg. True

@@ -18,13 +18,13 @@ from datetime import date
 from typing import Union
 import multiprocessing as mp
 
-sys.path.append(os.path.dirname(__file__))
-from Worker import worker_method
-from Record import Record
-from Organizer import Organizer
-import ObservableCalculator as obs
-from file_loader import FileLoader
-from AbstractSimulator import AbstractSimulator
+from benchtop.Worker import worker_method
+from benchtop.Record import Record
+from benchtop.registry import SIMULATOR_REGISTRY
+from benchtop.Organizer import Organizer
+import benchtop.ObservableCalculator as obs
+from benchtop.file_loader import FileLoader
+from benchtop.AbstractSimulator import AbstractSimulator
 
 
 logging.basicConfig(
@@ -91,7 +91,7 @@ class Experiment:
             )
 
     def run(self,
-            simulator: AbstractSimulator,
+            simulator: str | AbstractSimulator,
             *args, 
             start: float = 0.0,
             step: float = 30.0,
@@ -109,7 +109,24 @@ class Experiment:
 
         logger.debug(f"Starting in-silico experiment across {self.size} cores.")
 
-        # Add sbmls from config to args tuple
+        # Check registry for default simulator class:
+        if isinstance(simulator, str):
+
+            try:
+                simulator = SIMULATOR_REGISTRY[simulator]()
+            except KeyError:
+                raise ValueError (
+                    f"Unknown simulator '{simulator}'. "
+                    f"Avaliable: {list(SIMULATOR_REGISTRY)}"
+                )
+
+        elif not isinstance(simulator, AbstractSimulator):
+            raise TypeError(
+                "simulator must be either "
+                "a simulator name or child AbstractSimulator instance"
+            )
+
+        # Add sbml(s) from config to args tuple
         args = self.__add_sbml_to_args(args=args)
 
         num_rounds, job_index = self.org.task_organization(

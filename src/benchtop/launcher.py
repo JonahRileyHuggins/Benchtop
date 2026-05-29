@@ -15,11 +15,9 @@ import logging
 from typing import List
 from types import SimpleNamespace
 
-sys.path.append(os.path.dirname(__file__))
-from Experiment import Experiment
+from benchtop.Experiment import Experiment
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-from wrappers.SingleCell import SingleCell
+from benchtop.wrappers.SingleCell import SingleCell
 logging.basicConfig(
     level=logging.INFO, # Overriden if Verbose Arg. True
     format="%(asctime)s - %(levelname)s - %(message)s"
@@ -52,7 +50,7 @@ class Experimentalist:
             self.run_all()
         else:
             assert self.args.path is not None, "Error: No experiment provided, \
-                either provide a Experiment or use the --run_all flag to run all Experiments."
+                either provide a PEtab Problem or use the --run_all flag to run all Experiments."
             self.run_experiment(self.args.path)
 
 
@@ -81,7 +79,7 @@ class Experimentalist:
         Run an experiment
 
         self.args:
-            Experiment (str): The path to the Experiment YAML file.
+            Experiment (str): The path to the PEtab Problem (.yaml) file.
 
         Returns:
             None
@@ -130,4 +128,22 @@ class Experimentalist:
                     yaml_files.append(os.path.join(root, file))
 
         return yaml_files
+
+
+if __name__ == "__main__":
+    from benchtop.arguments import parse_args
+
+    args = parse_args()
+
+    if args.command == "Experiment":
+        """
+        Handle Experiment subcommand. 
+        Module to automate model-data comparisons and complex simulations. 
+        """
+        from benchtop.launcher import Experimentalist
+        Experimentalist(args)
+
+    else:
+        print("No valid command provided. Use --help for guidance.")
+
 

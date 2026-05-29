@@ -1,10 +1,10 @@
 #!/bin/env python3 
 """
-script name: tellurium-wrapper.py
+script name: wrap_amici.py
 Created on Thurs. 30-08-2025
 Author: Jonah R. Huggins
 
-Description: Wrapper method for running experiments with tellurium-solver
+Description: Wrapper method for running experiments with AMICI
 
 Input: Simulation Settings
 
@@ -31,7 +31,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class WrapAMICI(AbstractSimulator):
+class AmiciSimulator(AbstractSimulator):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

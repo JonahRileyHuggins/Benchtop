@@ -28,7 +28,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class WrapTellurium(AbstractSimulator):
+class TelluriumSimulator(AbstractSimulator):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
