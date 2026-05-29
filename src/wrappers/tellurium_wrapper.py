@@ -19,7 +19,7 @@ import logging
 import pandas as pd
 import tellurium as te
 
-from AbstractSimulator import AbstractSimulator
+from benchtop.AbstractSimulator import AbstractSimulator
 
 logging.basicConfig(
     level=logging.DEBUG, # Overriden if Verbose Arg. True
@@ -35,13 +35,12 @@ class TelluriumSimulator(AbstractSimulator):
 
     def load(self, *args, **kwargs):
         # default path for testing
-        sbml_path = "LR-model.xml"
-        solver = "cvodes"
+        solver = "cvode"
         # If a nested tuple is passed, unpack it
         for arg in args:
             logger.debug(f"Interpreting argument: {arg}")
             if type(arg) == str and os.path.exists(arg):
-
+                
                 _, extension = os.path.splitext(arg)
 
                 if extension == ".xml":
@@ -49,7 +48,7 @@ class TelluriumSimulator(AbstractSimulator):
                     sbml_path = arg
             if arg == "gillespie":
                 solver = arg
-
+        print(sbml_path)
         self.tool = te.loadSBMLModel(sbml_path)
         self.tool.setIntegrator(solver)
         integrator = self.tool.getIntegrator()

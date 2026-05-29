@@ -66,6 +66,13 @@ def parse_args():
         help="Execute simulation experiments in PEtab Problem format"
     )
     exp_group = experiment_parser.add_argument_group("Experiment Options")
+    
+    exp_group.add_argument(
+        '--simulator', '-s',
+        type=str, 
+        default="tellurium",
+        help=f"Simulation engine to use for simulation experiment."
+    )
     exp_group.add_argument(
         '--cores', '-c',
         type=int,

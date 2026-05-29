@@ -22,7 +22,7 @@ import amici
 import numpy as np
 import pandas as pd
 
-from AbstractSimulator import AbstractSimulator
+from amici.AbstractSimulator import AbstractSimulator
 
 logging.basicConfig(
     level=logging.DEBUG, # Overriden if Verbose Arg. True

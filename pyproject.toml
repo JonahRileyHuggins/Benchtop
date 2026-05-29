@@ -28,8 +28,12 @@ amici = [
 	"amici==0.32.0"
 ]
 
+[project.scripts]
+benchtop = "benchtop.launcher:main"
+
 [tool.setuptools]
 package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+

@@ -20,7 +20,7 @@ import multiprocessing as mp
 
 from benchtop.Worker import worker_method
 from benchtop.Record import Record
-from benchtop.registry import SIMULATOR_REGISTRY
+from benchtop.registry import load_simulator
 from benchtop.Organizer import Organizer
 import benchtop.ObservableCalculator as obs
 from benchtop.file_loader import FileLoader
@@ -113,7 +113,8 @@ class Experiment:
         if isinstance(simulator, str):
 
             try:
-                simulator = SIMULATOR_REGISTRY[simulator]()
+                simulator = load_simulator(simulator)
+
             except KeyError:
                 raise ValueError (
                     f"Unknown simulator '{simulator}'. "
