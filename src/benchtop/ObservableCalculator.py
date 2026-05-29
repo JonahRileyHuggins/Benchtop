@@ -190,7 +190,7 @@ class ObservableCalculator:
             raise TypeError("Input observable_formula must be a string.")
         
         # Regex for PEtab-compliant species identifiers
-        valid_species = re.findall(r"[A-Za-z_]\w*", formula)
+        valid_species = re.findall(r"(?:@[A-Za-z_]+::[A-Za-z_]\w*|[A-Za-z_]\w*)(?:\(\))?", formula)
 
         if not valid_species:
             raise ValueError("No valid species found in the observable formula.")
@@ -224,7 +224,7 @@ class ObservableCalculator:
                 raise TypeError("The species_i must be a string.")
             if not isinstance(observable_formula, str):
                 raise TypeError("The observable_formula must be a string.")
-
+            
             # Retrieve species-specific results from current entry
             replacement_value = dataset[species_i]
 
@@ -232,19 +232,21 @@ class ObservableCalculator:
                 raise KeyError(f"Species '{species_i}' not found in dataset.")
 
             # Convert to NumPy array
-            if isinstance(replacement_value, pd.Series):
-                replacement_value = replacement_value.to_numpy()
-            elif not isinstance(replacement_value, np.ndarray):
+            if isinstance(replacement_value, pd.Series) or isinstance(replacement_value, pd.DataFrame):
+                replacement_value = replacement_value.to_numpy().ravel()
+            if not isinstance(replacement_value, np.ndarray):
                 raise ValueError(f"Replacement value for species '{species_i}' is not a valid array or Series.")
-
+            
             # Prepare replacement string
             replacement_value_str = f"np.array({replacement_value.tolist()})"
-
+            
             # Replace only exact matches of the species name in the formula
-            observable_formula = re.sub(fr"\b{re.escape(species_i)}\b",
-                                        replacement_value_str,
-                                        observable_formula)
-
+            observable_formula = re.sub(
+                re.escape(species_i),
+                replacement_value_str,
+                observable_formula
+            )
+            
             return observable_formula
 
         except Exception as e:

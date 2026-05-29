@@ -63,7 +63,7 @@ class Worker:
         self.record = record
 
         # Store an instance of the simulator in worker class
-        self.simulator = simulator(*args)
+        self.simulator = simulator(args)
 
         # Run individual simulation
         self.__run_task(task, start, step)
@@ -113,7 +113,8 @@ class Worker:
             results_array = self.simulator.simulate(start, stop_time, step)
             
             results = pd.DataFrame(results_array)
-            results['time'] = np.arange(int(start), stop_time+step, int(step))
+
+            #results['time'] = np.arange(int(start), stop_time+step, len(results))
 
             # package into dictionary !!! <-- remnant from code dev
             parcel = self.__package_results(results, condition_id, cell)

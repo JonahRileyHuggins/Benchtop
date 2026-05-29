@@ -20,7 +20,7 @@ import multiprocessing as mp
 
 from benchtop.Worker import worker_method
 from benchtop.Record import Record
-from benchtop.registry import load_simulator
+from benchtop.registry import load_simulator, SIMULATOR_REGISTRY
 from benchtop.Organizer import Organizer
 import benchtop.ObservableCalculator as obs
 from benchtop.file_loader import FileLoader
@@ -82,7 +82,7 @@ class Experiment:
 
         # add one or more SBML files
         self.sbml_list = self.__sbml_getter()
-
+        
         # Loads jobs directory with results_dict class member
         self.record = Record(
             problem=self.loader.problems[0],
@@ -126,9 +126,9 @@ class Experiment:
                 "simulator must be either "
                 "a simulator name or child AbstractSimulator instance"
             )
-
+        
         # Add sbml(s) from config to args tuple
-        args = self.__add_sbml_to_args(args=args)
+        args = self.__add_sbml_to_args(args)
 
         num_rounds, job_index = self.org.task_organization(
             self.loader.problems[0].measurement_files[0],
@@ -192,13 +192,10 @@ class Experiment:
 
     def __add_sbml_to_args(self, args: tuple) -> tuple:
         """Adds sbml files stored in self to args tuple"""
-        args_list = list(args)
-        for item in self.sbml_list:
-            args_list.append(item)
-        
+        args_nsp = args[0] 
+        args_nsp.model_paths = self.sbml_list
         # padding to ensure single argument parameters get passed as proper structure
-        args_list.extend('\0')
-        return tuple(args_list)
+        return args_nsp
 
     def __sbml_getter(self) -> list:
         """Retrieves all sbml files defined in PEtab configuration file"""

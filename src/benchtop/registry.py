@@ -3,6 +3,7 @@ import importlib
 SIMULATOR_REGISTRY = {
             "amici": "wrappers.amici_wrapper.AmiciSimulator",
             "tellurium": "wrappers.tellurium_wrapper.TelluriumSimulator",
+            "bngsim": "wrappers.bngsim_wrapper.BNGSimSimulator"
 }
 
 def load_simulator(name: str):

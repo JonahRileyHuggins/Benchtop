@@ -67,7 +67,6 @@ class SingleCell(AbstractSimulator):
         for item in args:
             if os.path.exists(item):
                 sbml_list.append(item)
-        print(sbml_list)
         self.tool = SC(*sbml_list)
 
     def simulate(self, start, stop, step) -> pd.DataFrame:
