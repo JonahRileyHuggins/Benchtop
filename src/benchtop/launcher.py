@@ -15,7 +15,7 @@ import logging
 from typing import List
 from types import SimpleNamespace
 
-from benchtop.Experiment import Experiment
+from benchtop._experiment import Experiment
 from benchtop.arguments import parse_args
 
 logging.basicConfig(
@@ -31,7 +31,7 @@ def main():
 
     args = parse_args()
 
-    if args.command == "Experiment":
+    if args.command == "experiment":
         """
         Handle Experiment subcommand. 
         Module to automate model-data comparisons and complex simulations. 

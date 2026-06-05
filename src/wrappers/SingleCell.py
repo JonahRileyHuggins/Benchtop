@@ -23,8 +23,7 @@ import importlib.util
 import numpy as np
 import pandas as pd
 
-sys.path.append(f'{os.path.dirname(os.path.dirname(__file__))}/src/benchtop/')
-from AbstractSimulator import AbstractSimulator
+from benchtop._abstract_simulator import AbstractSimulator
 
 logging.basicConfig(
     level=logging.DEBUG, # Overriden if Verbose Arg. True

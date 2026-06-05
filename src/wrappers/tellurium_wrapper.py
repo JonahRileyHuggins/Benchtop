@@ -19,7 +19,7 @@ import logging
 import pandas as pd
 import tellurium as te
 
-from benchtop.AbstractSimulator import AbstractSimulator
+from benchtop._abstract_simulator import AbstractSimulator
 
 logging.basicConfig(
     level=logging.DEBUG, # Overriden if Verbose Arg. True

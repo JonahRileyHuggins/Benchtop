@@ -25,7 +25,7 @@ import pandas as pd
 
 sys.path.append('../')
 sys.path.append('../bin/')
-from src.benchtop.AbstractSimulator import AbstractSimulator
+from benchtop._abstract_simulator import AbstractSimulator
 from bin.modules.RunSPARCED import RunSPARCED
 
 

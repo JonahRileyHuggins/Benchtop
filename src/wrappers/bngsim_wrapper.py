@@ -20,7 +20,7 @@ import bngsim
 import numpy as np
 import pandas as pd
 
-from benchtop.AbstractSimulator import AbstractSimulator
+from benchtop._abstract_simulator import AbstractSimulator
 
 logging.basicConfig(
     level=logging.DEBUG, # Overriden if Verbose Arg. True
@@ -38,7 +38,7 @@ class BNGSimSimulator(AbstractSimulator):
         """
         bngsim object class constructor
         """
-        self.tool = bngsim.Model.from_net(args.model_paths[0])
+        self.tool = bngsim.Model.from_sbml(args.model_paths[0])
 
     def simulate(self, start, stop, step) -> pd.DataFrame:
         """Primary simulation function using BNGSim
@@ -50,8 +50,7 @@ class BNGSimSimulator(AbstractSimulator):
         """
 
         n_points = int(((stop+step) - start) / step)
-        n_points = [n_points if n_points < 1000 else 1000][0]
-        sim = bngsim.Simulator(self.tool, method="ode", codegen=True, net_path="/PyBNF-Private/bngsim/SPARCED.net")
+        sim = bngsim.Simulator(self.tool, method="ode", codegen=True)
         result = sim.run(t_span=(float(start), float(stop+step)), n_points=n_points)
         result_stack = np.column_stack((result.time, result.species))
         results_df = pd.DataFrame(result_stack, columns= [["time"] + result.species_names])

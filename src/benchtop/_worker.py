@@ -1,0 +1,260 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Individual worker method for simulated experiments. 
+
+Author: Jonah R. Huggins
+
+Description: 
+"""
+# -----------------------Package Import & Defined Arguements-------------------#
+import gc
+import logging
+import multiprocessing as mp
+
+import numpy as np
+import pandas as pd
+
+from benchtop._record import Record
+from benchtop._abstract_simulator import AbstractSimulator
+
+logging.basicConfig(
+    level=logging.DEBUG, # Overriden if Verbose Arg. True
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
+
+def worker_method(
+        task: str, 
+        record: Record,
+        simulator: AbstractSimulator,
+        args: tuple = (), 
+        start: float = 0.0, 
+        step: float = 30.0
+            ):
+    """Child process method for avoiding Multiprocessing from serializing Worker object"""
+    # Instantiate and run inside the child process
+    Worker(task, 
+           record, 
+           simulator, 
+           args, start, step)
+    return None  # avoid returning the Worker itself
+
+class Worker:
+
+    def __init__(
+            self,
+            task: str, 
+            record: Record,
+            simulator: AbstractSimulator,
+            args: tuple = (), 
+            start: float = 0.0, 
+            step: float = 30.0,
+        ):
+        """
+        simulator : AbstractSimulator
+            child class of abstract AbstractSimulator Class, defined as a
+            wrapper for a particular simulator
+
+        args : tuple, optional
+            Extra arguments to pass to function.
+        """
+        # self.lock = lock
+        self.record = record
+
+        # Store an instance of the simulator in worker class
+        self.simulator = simulator(args)
+
+        # Run individual simulation
+        self.__run_task(task, start, step)
+
+        # clean up simulator reference before returning
+        self.simulator = None
+        gc.collect()
+
+    def __run_task(
+            self, 
+            task: str,
+            start: float = 0.0,
+            step: float = 30.0,
+            ) -> dict:
+            """organized simulation method, executed by each process"""
+            rank = mp.current_process().name
+            if task is None:
+                logger.debug(f"Rank {rank} has no tasks to complete")
+
+                return # No need to save anything if no simulation task
+
+            # Retrieve worker task:
+            condition, cell, condition_id = self.record.condition_cell_id(
+                rank_task=task,
+                conditions_df=self.record.problem.condition_files[0]
+            )
+
+            logger.info(f"{rank} running {condition_id} for replicate {cell}")
+            logger.debug(
+                f"Conditions for {condition_id} are: "
+                f"{[f'{i}: {j}' for i, j in zip(condition.index, condition.values)]}"
+            )
+
+            # Overwrite base-state with dependency final values
+            precondition_results = self.__extract_preequilibration_results(condition_id, cell)
+            if precondition_results:
+                self.__setModelState(
+                    list(precondition_results.keys()), 
+                    list(precondition_results.values())
+                )
+
+            # Assign conditions of Worker task to model
+            self.__setModelState(condition.keys(), condition.values.tolist())
+
+            # Retrieve simulation duration, simulate
+            stop_time = self.__get_simulation_time(condition)
+            results_array = self.simulator.simulate(start, stop_time, step)
+            
+            results = pd.DataFrame(results_array)
+
+            #results['time'] = np.arange(int(start), stop_time+step, len(results))
+
+            # package into dictionary !!! <-- remnant from code dev
+            parcel = self.__package_results(results, condition_id, cell)
+
+            logger.info(f"{rank} finished {condition_id} for cell {cell}")
+
+            # Save code to .cache directory
+            self.__cache_results(parcel)
+
+            logger.info(f"Rank {rank} has completed {condition_id} for process {cell}")
+
+    def __extract_preequilibration_results(
+            self, 
+            condition_id: str, 
+            cell: int
+            ) -> dict:
+        """
+        Find if a given condition has a preequilibration. Pulls from results dictionary
+        final timepoint array.
+        """
+    
+        # For now, only supporting one problem per file
+        measurement_df = self.record.problem.measurement_files[0]
+        precondition_dict = {}
+
+        if 'preequilibrationConditionId' in measurement_df.columns:
+            # Filter matching simulationConditionId
+            precondition_matches = measurement_df[
+                measurement_df['simulationConditionId'] == condition_id
+            ]
+
+            if not precondition_matches.empty:
+                # Use iloc[0] to safely get the first preequilibrationConditionId
+                precondition_id = precondition_matches['preequilibrationConditionId'].iloc[0]
+                
+                if pd.notna(precondition_id) and str(precondition_id).strip().lower() != 'nan':
+                    
+                    logger.debug(("Searching for condition_id:",
+                                  f"{condition_id} (type {type(condition_id)}), ",
+                                 f"cell: {cell} (type {type(cell)})")
+                                )
+                    
+                    precondition_df = self.record.results_lookup(precondition_id, cell)
+                    
+                    if precondition_df is not None:
+
+                        logger.info((
+                            f"Extracting preequilibration condition {precondition_id}",
+                            f"for condition {condition_id}"
+                        ))
+
+                        if "time" in precondition_df.columns: 
+                            precondition_df = precondition_df.drop("time", axis = 1)
+
+                        precondition_results = precondition_df.iloc[-1].to_list()
+                        precondition_keys = list(precondition_df.columns)
+
+                        # convert to dict to maintain order of results to keys:
+                        precondition_dict = dict(zip(precondition_keys,precondition_results))
+
+        return precondition_dict
+    
+    def __setModelState(self, names: list, states: list) -> None:
+        """Set model state with list of floats"""
+        
+        if len(names) != len(states):
+                raise ValueError(
+                    f"Length mismatch: {len(names)} names vs {len(states)} states"
+                )
+
+        # Drop unwanted metadata keys
+        blacklist_names = ["conditionId", "conditionName"]
+
+        for name, state in zip(names, states):
+            if name in blacklist_names:
+                continue
+            if not isinstance(name, str):
+                raise TypeError(f"Invalid component name type: {name} ({type(name)})")
+            logger.debug(f"Modifying variable {name} with value {state}")
+            
+            self.simulator.modify(name, state)
+                
+        logger.debug("Updated model state")
+
+    def __get_simulation_time(
+            self, 
+            condition: pd.Series
+            ) -> float:
+        """
+        Returns the simulation time for a condition. Raises an error if time is undefined.
+        """
+        #Only supporting one problem per config file 
+        measurement_df = self.record.problem.measurement_files[0]
+        matching_times = measurement_df.loc[
+            measurement_df["simulationConditionId"].isin(condition), "time"
+        ]
+
+        if matching_times.empty:
+            raise ValueError(
+                f"No simulation time defined for condition {condition['conditionId']}"
+            )
+
+        return matching_times.max()
+
+    def __cache_results(
+            self, 
+            parcel: dict
+            ) -> None:
+        """Saves simulation results to cache directory"""
+
+        condition_id = parcel['conditionId']
+        cell = parcel["cell"]
+        results = parcel['results']
+
+        for key in self.record.cache.results_dict.keys(): 
+
+            if str(self.record.cache.results_dict[key]['conditionId']) == str(condition_id) \
+                and str(self.record.cache.results_dict[key]['cell']) == str(cell): 
+
+                # Save results to temporary cache directory
+                self.record.cache.save(key=key, df=results)
+
+
+        # Saves individual simulation data in cache directory
+
+    def __package_results(
+            self,
+            results: pd.DataFrame,
+            condition_id: str,
+            cell: str,
+        ) -> dict:
+        """
+        Combines results, condition identifier, and cell number into dict for storage, 
+        """
+
+        # make a dict entry in rank_results for every column in results
+        rank_results = {
+            "conditionId": condition_id,
+            "cell": int(cell),
+            "results": results,
+        }
+
+        return rank_results

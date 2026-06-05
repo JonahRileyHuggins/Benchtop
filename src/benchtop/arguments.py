@@ -59,9 +59,9 @@ def parse_args():
     # ---------- Subcommands ----------
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
-    # =========== [Command: Experiment] ======
+    # =========== [Command: experiment] ======
     experiment_parser = subparsers.add_parser(
-        "Experiment",
+        "experiment",
         parents=[shared_parser],
         help="Execute simulation experiments in PEtab Problem format"
     )
