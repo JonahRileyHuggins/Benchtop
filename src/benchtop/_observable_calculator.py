@@ -164,9 +164,12 @@ class ObservableCalculator:
             formula = self.swap_species_for_array(
                 dataset, variable, formula
             )
-
-        formula_answer = eval(formula)
-
+        try:
+            formula_answer = eval(formula)
+        except:
+            print("FORMULA:")
+            print(formula)
+            raise
         formula_answer = self._downsample_results(formula_answer, dataset, group)
 
         return formula_answer
@@ -239,14 +242,21 @@ class ObservableCalculator:
             
             # Prepare replacement string
             replacement_value_str = f"np.array({replacement_value.tolist()})"
-            
             # Replace only exact matches of the species name in the formula
+            
+            pattern = rf'(?<![A-Za-z0-9_]){re.escape(species_i)}(?![A-Za-z0-9_])'
+            #observable_formula = re.sub(
+            #    re.escape(species_i),
+            #    replacement_value_str,
+            #    observable_formula
+            #)
+
             observable_formula = re.sub(
-                re.escape(species_i),
+                pattern,
                 replacement_value_str,
                 observable_formula
             )
-            
+
             return observable_formula
 
         except Exception as e:

@@ -15,7 +15,7 @@ import logging
 from typing import List
 from types import SimpleNamespace
 
-from benchtop._experiment import Experiment
+from benchtop.experiment import Experiment
 from benchtop.arguments import parse_args
 
 logging.basicConfig(
