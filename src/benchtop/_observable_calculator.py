@@ -158,14 +158,16 @@ class ObservableCalculator:
             ):
             return None
         
-        species = self._get_valid_species(formula)
-        for variable in species:
-            # At each iteration, the formula updates with each species array
-            formula = self.swap_species_for_array(
-                dataset, variable, formula
-            )
+        species_names = self._get_valid_species(formula)
+        
+        namespace = self._formula_namespace(species_names, dataset)
         try:
-            formula_answer = eval(formula)
+            formula_answer = eval(
+                formula,
+                {"np": np},
+                namespace    
+            )
+
         except:
             print("FORMULA:")
             print(formula)
@@ -199,74 +201,63 @@ class ObservableCalculator:
             raise ValueError("No valid species found in the observable formula.")
 
         return valid_species
+   
 
-    def swap_species_for_array(
+    def _formula_namespace(
             self, 
+            species_names: list,
             dataset: pd.DataFrame, 
-            species_i: str, 
-            observable_formula: str
-            ) -> str:
+        ) -> dict:
         """
-        Takes a species identifier and returns the corresponding array from the results_dict.
+        Create a dict of species paired to results array for a particular formula
 
         Parameters:
         - dataset (pd.DataFrame): current experiment simulation loaded
         - species_i (str): The species identifier.
-        - observable_formula (str): The formula containing species and mathematical expressions.
 
         Returns:
-        - observable_formula (str): The observable formula with the species replaced by the array.
-
+        - namespace (dict): dict of species paired to results array
+        
         Raises:
         - KeyError: If the species identifier is not found in the results dictionary.
         - ValueError: If the replacement value cannot be converted to a NumPy array.
         """
         try:
-            # Validate inputs
-            if not isinstance(species_i, str):
-                raise TypeError("The species_i must be a string.")
-            if not isinstance(observable_formula, str):
-                raise TypeError("The observable_formula must be a string.")
-            
-            # Retrieve species-specific results from current entry
-            replacement_value = dataset[species_i]
+            namespace = {
+                species_name: np.asarray(self._safe_retrieve_array(dataset, species_name))
+                for species_name in species_names
+            }
 
-            if replacement_value is None:
-                raise KeyError(f"Species '{species_i}' not found in dataset.")
-
-            # Convert to NumPy array
-            if isinstance(replacement_value, pd.Series) or isinstance(replacement_value, pd.DataFrame):
-                replacement_value = replacement_value.to_numpy().ravel()
-            if not isinstance(replacement_value, np.ndarray):
-                raise ValueError(f"Replacement value for species '{species_i}' is not a valid array or Series.")
-            
-            # Prepare replacement string
-            replacement_value_str = f"np.array({replacement_value.tolist()})"
-            # Replace only exact matches of the species name in the formula
-            
-            pattern = rf'(?<![A-Za-z0-9_]){re.escape(species_i)}(?![A-Za-z0-9_])'
-            #observable_formula = re.sub(
-            #    re.escape(species_i),
-            #    replacement_value_str,
-            #    observable_formula
-            #)
-
-            observable_formula = re.sub(
-                pattern,
-                replacement_value_str,
-                observable_formula
-            )
-
-            return observable_formula
+            return namespace
 
         except Exception as e:
             print(f"Error in swap_species_for_array: {e}")
             raise
 
+    @staticmethod
+    def _safe_retrieve_array(
+            dataset, 
+            species_i
+        ) -> np.array:
+        # Retrieve species-specific results from current entry
+        species_arr = dataset[species_i]
+
+        if species_arr is None:
+            raise KeyError(f"Species '{species_i}' not found in dataset.")
+
+        # Convert to NumPy array
+        if isinstance(species_arr, pd.Series) or isinstance(species_arr, pd.DataFrame):
+            species_arr = species_arr.to_numpy().ravel()
+        if not isinstance(species_arr, np.ndarray):
+            raise ValueError(f"Replacement value for species '{species_i}' is not a valid array or Series.")
+       
+        return species_arr
+
+
     def _downsample_results(self, observable_answer: np.array, 
                             dataset: pd.DataFrame, 
                             group: pd.core.groupby.generic.DataFrameGroupBy
-                            ) -> np.array:
+        ) -> np.array:
         """Reduce the data to only the timepoints in the experimental data.
 
         Parameters:
