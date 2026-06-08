@@ -4,8 +4,8 @@ import json
 import shutil
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from src.benchtop.ResultsCacher import ResultCache
-from src.benchtop.Experiment import Experiment
+from src.benchtop._results_cacher import ResultCache
+from src.benchtop.experiment import Experiment
 
 
 def test_cache_constructor() -> None:

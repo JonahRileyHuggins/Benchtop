@@ -13,7 +13,7 @@ sys.path.append(
 )
 import pandas as pd
 
-from Record import Record
+from benchtop._record import Record
 
 problem = SimpleNamespace()
 problem.cell_count= 3

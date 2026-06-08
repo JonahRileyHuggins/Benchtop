@@ -19,9 +19,9 @@ sys.path.append(
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 YAML_PATH = os.path.join(DATA_DIR, "LR-benchmark.yaml")
 
-from file_loader import FileLoader
-from Record import Record
-from ObservableCalculator import ObservableCalculator
+from benchtop.file_loader import FileLoader
+from benchtop._record import Record
+from benchtop._observable_calculator import ObservableCalculator
 
 def dummy_experiment() -> SimpleNamespace:
     """Observable_calculator uses composition, requiring experiment class object"""

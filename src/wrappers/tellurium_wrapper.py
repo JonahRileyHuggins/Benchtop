@@ -1,20 +1,7 @@
-#!/bin/env python3 
-"""
-script name: tellurium-wrapper.py
-Created on Thurs. 30-08-2025
-Author: Jonah R. Huggins
+"""Tellurium (libRoadRunner) simulator wrapper."""
 
-Description: Wrapper method for running experiments with tellurium-solver
-
-Input: Simulation Settings
-
-Output:
-    Simulation Results
-
-"""
-import os
-import pathlib
 import logging
+import os
 
 import pandas as pd
 import tellurium as te
@@ -22,33 +9,31 @@ import tellurium as te
 from benchtop._abstract_simulator import AbstractSimulator
 
 logging.basicConfig(
-    level=logging.DEBUG, # Overriden if Verbose Arg. True
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    level=logging.DEBUG,
+    format="%(asctime)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 
 
 class TelluriumSimulator(AbstractSimulator):
+    """Load SBML via Tellurium; integrate with CVODE or Gillespie."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def load(self, *args, **kwargs):
-        # default path for testing
         solver = "cvode"
-        # If a nested tuple is passed, unpack it
+        sbml_path = None
+
         for arg in args:
-            logger.debug(f"Interpreting argument: {arg}")
-            if type(arg) == str and os.path.exists(arg):
-                
+            logger.debug("Interpreting argument: %s", arg)
+            if isinstance(arg, str) and os.path.exists(arg):
                 _, extension = os.path.splitext(arg)
-
                 if extension == ".xml":
-
                     sbml_path = arg
             if arg == "gillespie":
                 solver = arg
-        print(sbml_path)
+
         self.tool = te.loadSBMLModel(sbml_path)
         self.tool.setIntegrator(solver)
         integrator = self.tool.getIntegrator()
@@ -58,39 +43,20 @@ class TelluriumSimulator(AbstractSimulator):
         integrator.max_steps = 1e6
 
     def simulate(self, start, stop, step) -> pd.DataFrame:
-        """Primary simulation function using hybrid stochastic-deterministic method
-
-        Parameters:
-
-        Returns: 
-            - results_dataframe (pd.DataFrame): finalized results of simulation. 
-        """
-
-        n_points = int(((stop+step) - start) / step)
+        n_points = int(((stop + step) - start) / step)
 
         results_array = self.tool.simulate(
             start=float(start),
-            end=float(stop+step), 
-            points=n_points
-            )
+            end=float(stop + step),
+            points=n_points,
+        )
 
-        # Clean column headers: remove surrounding square brackets
         column_headers = [col.strip("[]") for col in results_array.colnames]
+        return pd.DataFrame(results_array, columns=column_headers)
 
-        results_df = pd.DataFrame(results_array, columns=column_headers)
-
-        return results_df
-
-    def modify(
-            self, 
-            component: str, 
-            value: int | float
-            ):
-        """
-        Method for SingleCell simulator modify method
-        """
-        logger.debug(f"Assigning model state variable {component} to value {value}  ({type(value)})")
+    def modify(self, component: str, value: int | float) -> None:
+        logger.debug("Setting %s = %s", component, value)
         try:
             self.tool[component] = float(value)
         except ValueError as e:
-            raise ValueError(f"Error in setting parameter value: {e}")
+            raise ValueError(f"Error setting parameter {component}: {e}") from e

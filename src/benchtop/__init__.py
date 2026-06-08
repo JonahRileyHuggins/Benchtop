@@ -1,8 +1,6 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+"""Benchtop: parallel in-silico experiments for biological models."""
 
 from .experiment import Experiment
 
 __version__ = "0.1.0"
-
-__all__ = ["experiment"]
+__all__ = ["Experiment"]

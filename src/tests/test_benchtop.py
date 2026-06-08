@@ -8,9 +8,9 @@ from multiprocessing import Manager
 import pandas as pd
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from src.benchtop.Experiment import Experiment
-from src.benchtop.Worker import Worker
-from src.benchtop.AbstractSimulator import AbstractSimulator
+from src.benchtop.experiment import Experiment
+from src.benchtop._worker import Worker
+from src.benchtop._abstract_simulator import AbstractSimulator
 from wrappers.tellurium_wrapper import WrapTellurium
 from make_dummy import dummy_simulator
 

@@ -1,29 +1,28 @@
+"""Simulator backend lookup: name → wrapper class."""
+
 import importlib
 
 SIMULATOR_REGISTRY = {
-            "amici": "wrappers.amici_wrapper.AmiciSimulator",
-            "tellurium": "wrappers.tellurium_wrapper.TelluriumSimulator",
-            "bngsim": "wrappers.bngsim_wrapper.BNGSimSimulator"
+    "amici": "wrappers.amici_wrapper.AmiciSimulator",
+    "tellurium": "wrappers.tellurium_wrapper.TelluriumSimulator",
+    "bngsim": "wrappers.bngsim_wrapper.BNGSimSimulator",
 }
 
+
 def load_simulator(name: str):
+    """Import and return a simulator class by registry name."""
+    if name not in SIMULATOR_REGISTRY:
+        raise KeyError(name)
 
-    try:
-        import_path = SIMULATOR_REGISTRY[name]
-
-    except ModuleNotFoundError as e:
-
-        raise ImportError(
-            f"The simulator '{name}' requires optional dependencies. "
-            f"Install with:\n\n"
-            f"pip install benchtop[{name}]"
-        ) from e
-
+    import_path = SIMULATOR_REGISTRY[name]
     module_path, class_name = import_path.rsplit(".", 1)
 
-    module = importlib.import_module(module_path)
+    try:
+        module = importlib.import_module(module_path)
+    except ModuleNotFoundError as e:
+        raise ImportError(
+            f"The simulator '{name}' requires optional dependencies. "
+            f"Install with: pip install benchtop[{name}]"
+        ) from e
 
-    cls = getattr(module, class_name)
-
-    return cls
-
+    return getattr(module, class_name)

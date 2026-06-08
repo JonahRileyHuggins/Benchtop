@@ -1,56 +1,24 @@
-#!/bin/env python3 
-"""
-Abstract parent class for specifying simulator modules. 
-Create a child class that has the bare minimum of each method described 
-within the Parent.
+"""Abstract base class for simulator wrappers (Tellurium, AMICI, etc.)."""
 
-author: Jonah R. Huggins
-
-"""
-from types import ModuleType
 from abc import ABC, abstractmethod
+from types import ModuleType
 
 
 class AbstractSimulator(ABC):
+    """Interface: load model, modify state, simulate over a time grid."""
 
     def __init__(self, *args, **kwargs):
-        """
-        Enforced constructor that requires a user-supplied tool/template.
-        
-        Params:
-        - tool (ModuleType): 
-            When super.__init__() is called from a child class, AbstractSimulator
-            returns the loaded module 
-
-        """
-        self.tool = type("Tool", (), {})()  # lightweight empty object
+        self.tool = type("Tool", (), {})()
         self.load(*args, **kwargs)
 
     @abstractmethod
     def load(self, *args, **kwargs) -> ModuleType:
-        """Abstract method enforcing constructor parameters for specific tool"""
-        raise NotImplementedError
+        """Load or compile the model from constructor arguments."""
 
     @abstractmethod
-    def modify(self):
-        """
-        Abstract method that must be implemented in child classes.
-        Intended to modify the tool or its configuration.
-        """
-        pass
+    def modify(self, component: str, value: float) -> None:
+        """Set a parameter or species value before simulation."""
 
     @abstractmethod
-    def simulate(self, start, stop, step):
-        """
-        Abstract method that must be implemented in child classes.
-        
-        Parameters
-        ----------
-        start : float
-            Simulation start time.
-        stop : float
-            Simulation stop time.
-        step : float
-            Simulation step size.
-        """
-        pass
+    def simulate(self, start: float, stop: float, step: float):
+        """Integrate from start to stop with given step; return trajectory."""

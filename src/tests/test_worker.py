@@ -6,7 +6,7 @@ from unittest.mock import patch, MagicMock
 import pandas as pd
 
 sys.path.append(os.path.dirname(__file__))
-from src.benchtop.Worker import Worker
+from src.benchtop._worker import Worker
 
 cache_dir = "./tests/data/.cache/"
 if not os.path.exists(cache_dir) or len(os.listdir(cache_dir)) < 13:

@@ -1,11 +1,5 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Curates and handles the organization of tasks for the experiment processes
+"""Task scheduling: topological ordering, cell replication, and round-robin assignment."""
 
-Author: Jonah R. Huggins
-"""
-# -----------------------Package Import & Defined Arguements-------------------#
 import os
 from collections import defaultdict, deque
 
@@ -13,84 +7,58 @@ import pandas as pd
 
 
 class Organizer:
+    """Build and assign simulation tasks respecting preequilibration dependencies."""
 
-    def __init__(self, workers = os.cpu_count()):
+    def __init__(self, workers: int = os.cpu_count()):
         self.workers = workers
 
-        
     def task_organization(
-        self, 
-        measurement_df: pd.DataFrame, 
-        cell_count: int
-    ) -> dict:
-        """Assigns tasks to each rank
-        Input:
-            rank: int - the rank of the MPI process
-            size: int - the number of MPI processes
-            details (dict): petab yaml file containing paths to PEtab files.
-        Output:
-            task_list: list - the list of tasks assigned to the rank
-        """
-
+        self,
+        measurement_df: pd.DataFrame,
+        cell_count: int,
+    ) -> tuple[int, dict]:
+        """Return (num_rounds, rank_jobs_directory) for the full experiment."""
         size = self.workers
 
         topological_list = self.topologic_sort(measurements_df=measurement_df)
         total_tasks = self.total_tasks(tasks=topological_list, cell_count=cell_count)
         delayed_list = self.delay_secondary_conditions(
-            measurements_df=measurement_df, 
+            measurements_df=measurement_df,
             task_list=total_tasks,
-            cell_count=cell_count
-            )
+            cell_count=cell_count,
+        )
 
         rank_jobs_directory = {}
-
         for i in range(size):
-            
             rank_ids = self.assign_tasks(i, len(delayed_list))
+            rank_jobs_directory[i] = [delayed_list[job] for job in rank_ids]
 
-            jobs_list = [delayed_list[job] for job in rank_ids]
-
-            rank_jobs_directory[i] = jobs_list
-
-        # Assign each rank it's task for the round
-        rounds_to_complete = -(-len(delayed_list) // size)
-
+        rounds_to_complete = -(-len(delayed_list) // size)  # ceiling division
         return rounds_to_complete, rank_jobs_directory
-    
+
     def topologic_sort(self, measurements_df: pd.DataFrame) -> list:
-        """
-        Deterministic topological sort for simulation conditions. Order maintained,
-        otehrwise, users would have to watch how they arrange conditions and pre-
-        -equilibrate conditions.
-        """
+        """Kahn topological sort of conditions; preequilibration edges first."""
+        if "preequilibrationConditionId" not in measurements_df.columns:
+            return measurements_df["simulationConditionId"].dropna().unique().tolist()
 
-        if 'preequilibrationConditionId' not in measurements_df.columns:
+        sim_nodes = measurements_df["simulationConditionId"].dropna().unique().tolist()
+        pre_nodes = measurements_df["preequilibrationConditionId"].dropna().unique().tolist()
+        nodes = sorted(set(sim_nodes) | set(pre_nodes))
 
-            return measurements_df['simulationConditionId'].dropna().unique().tolist()
-
-        # ---- 1. Collect All nodes ----
-        sim_nodes = measurements_df['simulationConditionId'].dropna().unique().tolist()
-        pre_nodes = measurements_df['preequilibrationConditionId'].dropna().unique().tolist()
-
-        # Keep order stable by sorting
-        nodes = sorted(set(sim_nodes) | set(pre_nodes)) 
-
-        # ---- 2. Build adjacency + indegree ----
         succs = defaultdict(list)
         indegree = {n: 0 for n in nodes}
 
-        for _, row in measurements_df.dropna(subset=['preequilibrationConditionId']).iterrows():
-            pre = row['preequilibrationConditionId']
-            sim = row['simulationConditionId']
-
+        for _, row in measurements_df.dropna(
+            subset=["preequilibrationConditionId"]
+        ).iterrows():
+            pre = row["preequilibrationConditionId"]
+            sim = row["simulationConditionId"]
             succs[pre].append(sim)
             indegree[sim] += 1
 
-        # Make successor lists
         for k in succs:
             succs[k].sort()
 
-        # ---- 3. Kahn algorithm ----
         queue = deque(sorted(n for n, d in indegree.items() if d == 0))
         ordered = []
 
@@ -103,7 +71,6 @@ class Organizer:
                 if indegree[m] == 0:
                     queue.append(m)
 
-            # queue stable after each insertion
             queue = deque(sorted(queue))
 
         if len(ordered) != len(nodes):
@@ -112,66 +79,53 @@ class Organizer:
         return ordered
 
     def delay_secondary_conditions(
-            self,
-            measurements_df: pd.DataFrame, 
-            task_list: list, 
-            cell_count: int, 
-        ) -> list:
-        
-        """Inserts into topologically sorted task list (with cells) `None` values 
-        to delay conditions with pre-conditional dependency simulations"""
-
-        if 'preequilibrationConditionId' not in measurements_df.columns:
+        self,
+        measurements_df: pd.DataFrame,
+        task_list: list,
+        cell_count: int,
+    ) -> list:
+        """Insert None padding so preequilibration completes before dependents."""
+        if "preequilibrationConditionId" not in measurements_df.columns:
             return task_list
-        
-        pre_conds = measurements_df['preequilibrationConditionId'].drop_duplicates().dropna().to_list()
-        # Since this is only called after topological sorting via Khan's alg., all 0-order conditions 
-        # are first; the task_list is already ordered!
+
+        pre_conds = (
+            measurements_df["preequilibrationConditionId"]
+            .drop_duplicates()
+            .dropna()
+            .to_list()
+        )
 
         for idx, job in enumerate(task_list):
-
-            if job == None:
+            if job is None:
                 continue
 
             cond_id = job.split("+")[0]
+            if cond_id not in pre_conds:
+                continue
 
-            if cond_id in pre_conds:
+            pause_ranks = max(self.workers - cell_count, 0)
+            while pause_ranks:
+                task_list.insert(idx + cell_count, None)
+                pause_ranks -= 1
 
-                pause_ranks = max((self.workers - cell_count), 0)
-
-                while pause_ranks:
-
-                    task_list.insert(idx+cell_count, None)
-
-                    pause_ranks -= 1
-
-                pre_conds.pop(pre_conds.index(cond_id))
+            pre_conds.pop(pre_conds.index(cond_id))
 
         return task_list
 
     def total_tasks(self, tasks: list, cell_count: int) -> list:
-        """makes list of all tasks including replicate cells"""
-        list_of_jobs = []
-        for cond in tasks:
-            for cell in range(1, cell_count + 1):
-                list_of_jobs.append(f"{cond}+{cell}")
-        return list_of_jobs
+        """Expand conditions into ``conditionId+cell`` task strings."""
+        return [
+            f"{cond}+{cell}"
+            for cond in tasks
+            for cell in range(1, cell_count + 1)
+        ]
 
-    def assign_tasks(
-            self, 
-            rank: int, 
-            total_jobs: int, 
-            ) -> list:
-        """
-        Assign tasks to a given rank in round-robin fashion, including those that are part
-        of sequential chains. Ensures layering of job dependencies, avoids
-        oversubscription what the longest sequential dependency chain requires.
-        """
+    def assign_tasks(self, rank: int, total_jobs: int) -> list:
+        """Round-robin job indices assigned to a single worker rank."""
         size = self.workers
-        num_rounds = -(-total_jobs // size)  # Equivalent to math.ceil(total_jobs / size)
-        
+        num_rounds = -(-total_jobs // size)
+
         rank_jobs = []
-        
         for round_index in range(num_rounds):
             job_id = rank + round_index * size
             if job_id < total_jobs:
@@ -179,27 +133,15 @@ class Organizer:
 
         return rank_jobs
 
-    def task_assignment(
-        self,
-        rank_jobs_directory: dict,
-        round_i: int
-    ) -> list:
-        size = self.workers
-
+    def task_assignment(self, rank_jobs_directory: dict, round_i: int) -> list:
+        """Collect one task per worker for the given round."""
         round_i_tasks = []
 
-        # Assign each rank it's task for the round
-        for i in range(size):
-
+        for i in range(self.workers):
             rank_jobs = rank_jobs_directory[i]
-
             if round_i < len(rank_jobs):
-                rank_job_for_round = rank_jobs[round_i]
-
+                round_i_tasks.append(rank_jobs[round_i])
             else:
-                rank_job_for_round = None
-
-            round_i_tasks.append(rank_job_for_round)
-
+                round_i_tasks.append(None)
 
         return round_i_tasks
