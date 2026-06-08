@@ -136,6 +136,7 @@ problems:
       - LR-model.xml
     cell_count: 3
 ```
+**Note**: The `cell_count` attribute is only applicable to `Benchtop` and specifies the number of replicates to simulate per-condition.
 
 ### Data files
 
