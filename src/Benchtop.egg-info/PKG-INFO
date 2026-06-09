@@ -1,0 +1,19 @@
+Metadata-Version: 2.4
+Name: Benchtop
+Version: 0.1.0
+Summary: A tool for running simulation experiments formated as PEtab Problems.
+Author-email: Jonah Huggins <JonahRileyHuggins@gmail.com>, Marc Birtwistle <marc.birtwistle@gmail.com>
+License: GPL-2.0
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: numpy==2.2.4
+Requires-Dist: pandas==2.3.1
+Requires-Dist: pyyaml==6.0.2
+Requires-Dist: tellurium==2.2.11.2
+Provides-Extra: amici
+Requires-Dist: amici==0.32.0; extra == "amici"
+Dynamic: license-file
+
+# Benchtop
+For in-silico experiments of biological models

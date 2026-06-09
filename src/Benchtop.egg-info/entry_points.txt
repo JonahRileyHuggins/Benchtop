@@ -1,0 +1,2 @@
+[console_scripts]
+benchtop = benchtop.launcher:main
