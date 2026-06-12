@@ -18,13 +18,13 @@ from datetime import date
 from typing import Union
 import multiprocessing as mp
 
-from benchtop.Worker import worker_method
-from benchtop.Record import Record
+from benchtop._worker import worker_method
+from benchtop._record import Record
 from benchtop.registry import load_simulator, SIMULATOR_REGISTRY
-from benchtop.Organizer import Organizer
-import benchtop.ObservableCalculator as obs
+from benchtop._organizer import Organizer
+import benchtop._observable_calculator as obs
 from benchtop.file_loader import FileLoader
-from benchtop.AbstractSimulator import AbstractSimulator
+from benchtop._abstract_simulator import AbstractSimulator
 
 
 logging.basicConfig(
