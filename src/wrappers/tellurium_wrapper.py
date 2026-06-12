@@ -18,23 +18,13 @@ logger = logging.getLogger(__name__)
 class TelluriumSimulator(AbstractSimulator):
     """Load SBML via Tellurium; integrate with CVODE or Gillespie."""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, args, **kwargs):
+        super().__init__(args, **kwargs)
 
-    def load(self, *args, **kwargs):
+    def load(self, args, **kwargs):
         solver = "cvode"
-        sbml_path = None
-
-        for arg in args:
-            logger.debug("Interpreting argument: %s", arg)
-            if isinstance(arg, str) and os.path.exists(arg):
-                _, extension = os.path.splitext(arg)
-                if extension == ".xml":
-                    sbml_path = arg
-            if arg == "gillespie":
-                solver = arg
-
-        self.tool = te.loadSBMLModel(sbml_path)
+        
+        self.tool = te.loadSBMLModel(args.model_paths[0])
         self.tool.setIntegrator(solver)
         integrator = self.tool.getIntegrator()
         integrator.absolute_tolerance = 1e-8

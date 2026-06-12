@@ -15,5 +15,220 @@ Provides-Extra: amici
 Requires-Dist: amici==0.32.0; extra == "amici"
 Dynamic: license-file
 
+```bash
+        .   °                .......                                     °   
+       | .° |                :.   .:                                   (  .° )
+       | °  |                .'   '.                                    |°  |
+       |° . |                |     |                                   /°  ° \
+      (______)               `_____'                                  (_______) 
+▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌
+  ▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄  ▄▄        ▄  ▄▄▄▄▄▄▄▄▄▄  ▄        ▄  ▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄ 
+ ▐░░░░░░░░░▌ ▐░░░░░░░░░░▌▐░░▌      ▐░▌▐░░░░░░░░░░▌▐░▌      ▐░▌▐░░░░░░░░░░▌▐░░░░░░░░░░▌▐░░░░░░░░░░▌
+ ▐░█▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀▀ ▐░▌░▌     ▐░▌▐░█▀▀▀▀▀▀▀▀ ▐░▌      ▐░▌ ▀▀▀▀█░█▀▀▀ ▐░█▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀█░▌
+ ▐░█▄▄▄▄▄▄█░▌▐░█▄▄▄▄▄▄▄▄ ▐░▌ ▐░▌   ▐░▌▐░▌         ▐░█▄▄▄▄▄▄█░▌     ▐░▌    ▐░▌      ▐░▌▐░█▄▄▄▄▄▄█░▌
+ ▐░░░░░░░░░▌ ▐░░░░░░░░░░▌▐░▌  ▐░▌  ▐░▌▐░▌         ▐░░░░░░░░░░▌     ▐░▌    ▐░▌      ▐░▌▐░░░░░░░░░░▌
+ ▐░█▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀▀ ▐░▌   ▐░▌ ▐░▌▐░▌         ▐░█▀▀▀▀▀▀█░▌     ▐░▌    ▐░▌      ▐░▌▐░█▀▀▀▀▀▀▀▀ 
+ ▐░█▄▄▄▄▄▄█░▌▐░█▄▄▄▄▄▄▄▄ ▐░▌     ▐░▐░▌▐░█▄▄▄▄▄▄▄▄ ▐░▌      ▐░▌     ▐░▌    ▐░█▄▄▄▄▄▄█░▌▐░▌          
+ ▐░░░░░░░░░▌ ▐░░░░░░░░░░▌▐░▌      ▐░░▌▐░░░░░░░░░░▌▐░▌      ▐░▌     ▐░▌    ▐░░░░░░░░░░▌▐░▌          
+  ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀▀  ▀        ▀▀  ▀▀▀▀▀▀▀▀▀▀  ▀        ▀       ▀      ▀▀▀▀▀▀▀▀▀▀  ▀           
+```
+
 # Benchtop
-For in-silico experiments of biological models
+
+**Parallel in-silico experiments for biological models**
+
+Benchtop runs simulation benchmarks defined in a [PEtab](https://petab.readthedocs.io/)-inspired format. Given a YAML configuration and companion TSV/SBML files, it schedules conditions in dependency order, simulates across multiple CPU cores, caches intermediate results, and computes observables for model–data comparison.
+
+## Features
+
+- **PEtab-style benchmarks** — Define experiments with YAML plus standard TSV files for conditions, measurements, observables, and parameters.
+- **Parallel execution** — Distributes simulation tasks across processes using a round-robin worker pool.
+- **Preequilibration support** — Topologically sorts conditions so preequilibration runs before dependent simulations.
+- **Single-cell replication** — Run multiple stochastic replicates per condition via `cell_count`.
+- **Result caching** — Persists per-simulation pickle files and a cache index; supports resuming incomplete runs.
+- **Observable calculation** — Evaluates observable formulas from simulation trajectories and aligns them with experimental measurements.
+- **Pluggable simulators** — Built-in Tellurium wrapper; optional AMICI support via extras.
+
+## How it works
+
+```mermaid
+flowchart LR
+    YAML[Benchmark YAML] --> Loader[FileLoader]
+  Loader --> Exp[Experiment]
+  Exp --> Org[Organizer]
+  Org -->|topological task order| Pool[Worker pool]
+  Pool --> Sim[Simulator wrapper]
+  Sim --> Cache[ResultCache]
+  Cache --> Obs[ObservableCalculator]
+  Obs --> Results[results/*.pkl]
+```
+
+1. **FileLoader** reads the benchmark YAML and loads PEtab TSV/SBML files into memory.
+2. **Organizer** builds a dependency-aware task list (conditions × cell replicates) and assigns work to workers.
+3. **Workers** load the SBML model, apply condition parameters, run preequilibration when needed, and simulate.
+4. **ResultCache** stores raw trajectories as pickle files alongside a JSON index.
+5. **ObservableCalculator** downsamples trajectories, evaluates observable formulas, and packages results next to experimental data.
+
+## Requirements
+
+- Python ≥ 3.12
+- See [pyproject.toml](pyproject.toml) for pinned dependencies
+
+## Installation
+
+From the repository root:
+
+```bash
+pip install -e .
+```
+
+For AMICI support (optional):
+
+```bash
+pip install -e ".[amici]"
+```
+
+This installs the `benchtop` CLI entry point.
+
+## Quick start
+
+### Command line
+
+Run a single benchmark:
+
+```bash
+benchtop experiment -p src/tests/data/LR-benchmark.yaml -s tellurium -c 4
+```
+
+Run all benchmarks in a directory:
+
+```bash
+benchtop experiment --run_all path/to/benchmarks/ -s tellurium
+```
+
+Useful flags:
+
+| Flag | Description |
+|------|-------------|
+| `-p`, `--path` | Path to benchmark YAML |
+| `-s`, `--simulator` | Simulator backend (`tellurium` or `amici`) |
+| `-c`, `--cores` | Number of parallel processes (default: CPU count) |
+| `--cache_dir` | Directory for simulation cache (default: `./.cache`) |
+| `--load_index` | Resume from an existing cache index |
+| `--No_Observables` | Skip observable calculation after simulation |
+| `-v`, `--verbose` | Enable debug logging |
+
+### Python API
+
+```python
+from benchtop.experiment import Experiment
+
+experiment = Experiment(
+    "src/tests/data/LR-benchmark.yaml",
+    cores=4,
+    cache_dir="./.cache",
+    verbose=True,
+)
+
+experiment.run("tellurium")
+experiment.observable_calculation()
+```
+
+You can also pass a custom simulator class that extends `AbstractSimulator` instead of a registry name.
+
+A worked example is available in [demo/in-silico-experiment-demo.ipynb](demo/in-silico-experiment-demo.ipynb).
+
+## Benchmark configuration
+
+A benchmark is a directory containing a YAML file that references PEtab-style data files. Example ([src/tests/data/LR-benchmark.yaml](src/tests/data/LR-benchmark.yaml)):
+
+```yaml
+format_version: 1
+parameter_file: LR Model - Parameters.tsv
+problems:
+  - name: test-benchmark
+    condition_files:
+      - conditions.tsv
+    measurement_files:
+      - measurements.tsv
+    observable_files:
+      - observables.tsv
+    sbml_files:
+      - LR-model.xml
+    cell_count: 3
+```
+**Note**: The `cell_count` attribute is only applicable to `Benchtop` and specifies the number of replicates to simulate per-condition.
+
+### Data files
+
+| File | Purpose |
+|------|---------|
+| **Parameter TSV** | Model parameters (`parameterId`, `parameterScale`, `nominalValue`, …) |
+| **conditions.tsv** | Simulation conditions — maps `conditionId` to parameter overrides |
+| **measurements.tsv** | Links observables to conditions, optional preequilibration, and measurement timepoints |
+| **observables.tsv** | Observable definitions (`observableId`, `observableFormula`, `noiseFormula`) |
+| **SBML** | One or more model files (`.xml` or `.sbml`) |
+
+When `preequilibrationConditionId` is set in `measurements.tsv`, Benchtop runs the preequilibration condition first and uses its final state as the initial condition for the simulation.
+
+### Results
+
+After observable calculation, results are written as a pickle file in a `results/` subdirectory next to the benchmark YAML (named after the problem or today's date). Each entry in the results dictionary contains:
+
+- `conditionId` and `cell` replicate index
+- Per-observable `experiment`, `simulation`, and `time` arrays
+
+## Simulators
+
+Benchtop uses a small registry of simulator wrappers in [src/wrappers/](src/wrappers/). Each wrapper implements `AbstractSimulator` with `load`, `modify`, and `simulate` methods.
+
+| Name | Class | Install |
+|------|-------|---------|
+| `tellurium` | `TelluriumSimulator` | Included by default |
+| `amici` | `AmiciSimulator` | `pip install -e ".[amici]"` |
+
+To add a new backend, create a wrapper under `src/wrappers/` and register it in [src/benchtop/registry.py](src/benchtop/registry.py).
+
+## Project structure
+
+```
+Benchtop/
+├── demo/                          # Jupyter notebook walkthrough
+├── src/
+│   ├── benchtop/                  # Core library
+│   │   ├── experiment.py          # Main experiment orchestrator
+│   │   ├── _organizer.py          # Task scheduling and topological sort
+│   │   ├── _worker.py             # Per-simulation worker logic
+│   │   ├── _record.py             # Results dictionary management
+│   │   ├── _results_cacher.py     # Pickle cache and index
+│   │   ├── _observable_calculator.py
+│   │   ├── _abstract_simulator.py # Simulator interface
+│   │   ├── file_loader.py         # YAML and TSV loading
+│   │   ├── registry.py            # Simulator lookup
+│   │   ├── launcher.py            # CLI entry point
+│   │   └── arguments.py           # CLI argument parsing
+│   ├── wrappers/                  # Simulator backends
+│   └── tests/                     # Test suite and example data
+├── pyproject.toml
+└── README.md
+```
+
+## Running tests
+
+From the repository root:
+
+```bash
+cd src/tests
+python run_tests.py
+```
+
+The test suite uses the LR receptor benchmark in [src/tests/data/](src/tests/data/) and exercises experiment execution, caching, workers, organizers, records, and observable calculation.
+
+## Authors
+
+- Jonah Huggins — [JonahRileyHuggins@gmail.com](mailto:JonahRileyHuggins@gmail.com)
+- Marc Birtwistle — [marc.birtwistle@gmail.com](mailto:marc.birtwistle@gmail.com)
+
+## License
+
+See [LICENSE](LICENSE).
