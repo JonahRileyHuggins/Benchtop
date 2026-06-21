@@ -74,21 +74,18 @@ class Experiment:
 
         self.details = self.loader.config ### slate to remove self-storage
 
-        self.name = self.details.problems[0].name or None
-
-        self.cell_count = getattr(self.details.problems[0], "cell_count", 1)
-
-        logger.info("Loading Experiment %s details from %s", self.name, self.petab_yaml)
-
         # add one or more SBML files
         self.sbml_list = self.__sbml_getter()
         
         # Loads jobs directory with results_dict class member
         self.record = Record(
-            problem=self.loader.problems[0],
+            problems=self.loader.problems,
             cache_dir=cache_dir,
             load_index=load_index
             )
+
+        self.name = os.path.splitext(os.path.basename(self.petab_yaml))[0]
+        self.cell_count = self.loader.problems[0].cell_count
 
     def run(self,
             simulator: str | AbstractSimulator,
@@ -107,62 +104,85 @@ class Experiment:
             Extra arguments to pass to function.
         """
 
-        logger.debug(f"Starting in-silico experiment across {self.size} cores.")
+        resolved_simulator = self._resolve_simulator(simulator)
 
-        # Check registry for default simulator class:
+        for problem_index, config_problem in enumerate(self.details.problems):
+            problem = self.loader.problems[problem_index]
+            problem_name = problem.name
+
+            if self.record.cache.is_problem_complete(problem_name):
+                logger.info("Skipping completed problem '%s'", problem_name)
+                continue
+
+            self.name = problem_name
+            self.cell_count = problem.cell_count
+            self.record.set_current_problem(problem, problem_name)
+
+            logger.info(
+                "Running problem '%s' (%d/%d) from %s",
+                problem_name,
+                problem_index + 1,
+                len(self.loader.problems),
+                self.petab_yaml,
+            )
+            logger.debug(
+                "Starting in-silico experiment %s across %d cores.",
+                self.name,
+                self.size,
+            )
+
+            worker_args_base = self.__add_sbml_to_args(args)
+
+            num_rounds, job_index = self.org.task_organization(
+                problem.measurement_files[0],
+                self.cell_count
+            )
+
+            for round_i in range(num_rounds):
+                tasks = self.org.task_assignment(
+                    rank_jobs_directory=job_index,
+                    round_i=round_i
+                )
+
+                logger.debug("Tasks for round: %s", tasks)
+
+                worker_args = [
+                    (
+                        task, 
+                        self.record,
+                        resolved_simulator,
+                        worker_args_base,
+                        start,
+                        step, 
+                    ) 
+                    for task in tasks]
+                
+                with mp.Pool(processes=self.size) as pool:
+                    pool.starmap(worker_method, worker_args)
+                            
+                self.__update_cache_for_round(tasks)
+
+            self.record.cache.update_problem_status(problem_name, True)
+            logger.info("Problem '%s' complete.", problem_name)
+
+    def _resolve_simulator(
+        self, simulator: str | AbstractSimulator
+    ) -> AbstractSimulator:
         if isinstance(simulator, str):
-
             try:
-                simulator = load_simulator(simulator)
-
+                return load_simulator(simulator)
             except KeyError:
                 raise ValueError (
                     f"Unknown simulator '{simulator}'. "
                     f"Avaliable: {list(SIMULATOR_REGISTRY)}"
                 )
 
-        elif not isinstance(simulator, AbstractSimulator):
-            raise TypeError(
-                "simulator must be either "
-                "a simulator name or child AbstractSimulator instance"
-            )
-        
-        # Add sbml(s) from config to args tuple
-        args = self.__add_sbml_to_args(args)
+        if callable(simulator):
+            return simulator
 
-        num_rounds, job_index = self.org.task_organization(
-            self.loader.problems[0].measurement_files[0],
-            self.cell_count
+        raise TypeError(
+            "simulator must be a registered name or a callable simulator wrapper"
         )
-
-        for round_i in range(num_rounds):
-
-            # Get list of tasks for current round:
-            tasks = self.org.task_assignment(
-                rank_jobs_directory=job_index,
-                round_i=round_i
-            )
-
-            logger.debug(f"Tasks for round: {tasks}")
-
-            worker_args = [
-                (
-                    task, 
-                    self.record,
-                    simulator,
-                    # lock,
-                    args, # !<-- Need to add sbml list back to args
-                    start,
-                    step, 
-                ) 
-                for task in tasks]
-            
-            # split workload across processes:
-            with mp.Pool(processes=self.size) as pool:
-                pool.starmap(worker_method, worker_args)
-                        
-            # change simulation-complete status to `True`
-            self.__update_cache_for_round(tasks)
 
     def __update_cache_for_round(self, task_list: list) -> None:
         """Receives task list for current round,
@@ -176,25 +196,25 @@ class Experiment:
                 continue
 
             condition_id, cell = task.split("+")
+            key = self.record.find_job_key(condition_id, cell)
 
-            matched = False
-            for key, record in self.record.cache.results_dict.items():
-                if str(record['conditionId']) == str(condition_id) \
-                and str(record['cell']) == str(cell):
-                    self.record.cache.update_cache_index(key=key, status=True)
-                    matched = True
-                    break
-
-            if not matched:
+            if key is None:
                 remaining.append(task)
+                continue
+
+            self.record.cache.update_cache_index(key=key, status=True)
 
         assert remaining == [], f"Error in simulation task updates: {remaining}"
 
     def __add_sbml_to_args(self, args: tuple) -> tuple:
         """Adds sbml files stored in self to args tuple"""
-        args_nsp = args[0] 
+        if not args:
+            from types import SimpleNamespace
+            args_nsp = SimpleNamespace()
+        else:
+            args_nsp = args[0]
+
         args_nsp.model_paths = self.sbml_list
-        # padding to ensure single argument parameters get passed as proper structure
         return args_nsp
 
     def __sbml_getter(self) -> list:
@@ -217,119 +237,144 @@ class Experiment:
             a pickle file
         """
 
-        # Benchmark results are stored within the specified model directory
-
         results_directory = os.path.join(os.path.dirname(self.petab_yaml), "results")
 
-        if args is not None and 'output' in args:
-
+        if args is not None and hasattr(args, "output") and args.output:
             results_directory = args.output
 
         if not os.path.exists(results_directory):
             os.makedirs(results_directory)
 
-        # Final output is saved in pickle format
-        results_path = os.path.join(results_directory, f"{date.today()}.pkl")
+        benchmark_name = os.path.splitext(os.path.basename(self.petab_yaml))[0]
+        results_path = os.path.join(results_directory, f"{benchmark_name}.pkl")
 
-        if self.name is not None:
-            results_path = os.path.join(results_directory, f"{self.name}.pkl")
+        job_results = {
+            key: self.record.cache.results_dict[key]
+            for key in self.record.cache.job_keys()
+        }
 
         with open(results_path, "wb") as f:
-            pkl.dump(self.record.cache.results_dict, f)
+            pkl.dump(job_results, f)
 
         self.record.cache.delete_cache()
 
-
     def observable_calculation(self, *args) -> None:
-        """Calculate the observables and compare to the experimental data.
-        input:
-            results: dict - results of the SPARCED model unit test simulation
-        output:
-            returns the results of the SPARCED model unit test simulation
-        """
-        self.record.cache.results_dict = obs.ObservableCalculator(self).run()
+        """Calculate observables and compare to experimental data for all problems."""
+        combined_results = {}
 
-        self.save_results(args)
+        for problem_index, problem in enumerate(self.loader.problems):
+            problem_name = problem.name
+            self.record.set_current_problem(problem, problem_name)
 
-        return # Proceeds to next command provided in launchers.py
+            problem_results = obs.ObservableCalculator(self).run()
+            combined_results[problem_name] = problem_results
+
+        self.record.cache.results_dict = combined_results
+        self.save_results(args[0] if args else None)
+
+        return
 
     def resume(
         self,
-        simulator: AbstractSimulator,
+        simulator: str | AbstractSimulator,
         *args, 
         start: float = 0.0,
         step: float = 30.0,
     ) -> None:
         """Starts Experiment from last completed simulation setting"""
         
+        resolved_simulator = self._resolve_simulator(simulator)
+        worker_args_base = self.__add_sbml_to_args(args)
         cache_index = self.record.cache.read_cache_index()
+        resumed_any = False
 
-        # --- 1. Identify incomplete jobs ---
-        incomplete = [
-            f"{self.record.cache.results_dict[key]['conditionId']}+{self.record.cache.results_dict[key]['cell']}"
-            for key in cache_index.keys()
-            if not cache_index[key]['complete']
-        ]
+        for problem_index, problem in enumerate(self.loader.problems):
+            problem_name = problem.name
 
-        # --- 2. Find all pre-simulations (unique topo order) ---
-        topo_sorted = self.org.topologic_sort(
-            measurements_df=self.loader.problems[0].measurement_files[0]
-        )
+            if self.record.cache.is_problem_complete(problem_name):
+                logger.info("Skipping completed problem '%s'", problem_name)
+                continue
 
-        # --- 3. Retrieve all simulations + cell replicates ---
-        total_tasks = self.org.total_tasks(
-            tasks=topo_sorted,
-            cell_count=self.cell_count
-        )
+            self.name = problem_name
+            self.cell_count = problem.cell_count
+            self.record.set_current_problem(problem, problem_name)
 
-        # --- 4. Filter total_tasks to only include incomplete ones ---
-        incomplete_set = set(incomplete)
-        total_tasks = [task for task in total_tasks if task in incomplete_set]
-
-        # --- 5. Guard clause: if nothing to resume ---
-        if not total_tasks:
-            logger.info(f"No incomplete jobs found for experiment '{self.name}'. Nothing to resume.")
-            return
-
-        # --- 6. Handle zero-order dependency logic ---
-        delayed_tasks = self.org.delay_secondary_conditions(
-            measurements_df=self.loader.problems[0].measurement_files[0],
-            task_list=total_tasks,
-            cell_count=self.cell_count
-        )
-
-        logger.info(f"Resuming {len(total_tasks)} jobs for experiment '{self.name}'...")
-
-        # --- 7. Rebuild task index for parallel scheduling ---
-        num_rounds = -(-len(delayed_tasks) // self.size)  # Ceiling division
-
-        for round_idx in range(num_rounds):
-            tasks = []
-            for _ in range(self.size):
-                if delayed_tasks:
-                    tasks.append(delayed_tasks.pop(0))
-                else:
-                    tasks.append(None)
-
-            logger.debug(f"Tasks for round {round_idx + 1}/{num_rounds}: {tasks}")
-
-            worker_args = [
-                (
-                    task, 
-                    self.record,
-                    simulator,
-                    *args,
-                    start,
-                    step
-                ) 
-                for task in tasks
+            incomplete = [
+                f"{cache_index[key]['conditionId']}+{cache_index[key]['cell']}"
+                for key in self.record.cache.job_keys()
+                if cache_index[key].get("problem") == problem_name
+                and not cache_index[key]["complete"]
             ]
 
-            # --- 8. Parallel execution ---
-            with mp.Pool(processes=self.size) as pool:
-                pool.starmap(worker_method, worker_args)
+            topo_sorted = self.org.topologic_sort(
+                measurements_df=problem.measurement_files[0]
+            )
 
-            logger.debug(f"Completed round {round_idx + 1}/{num_rounds}")
+            total_tasks = self.org.total_tasks(
+                tasks=topo_sorted,
+                cell_count=self.cell_count
+            )
 
-        # --- 9. Store final results and cleanup ---
-        self._store_final_results()
+            incomplete_set = set(incomplete)
+            total_tasks = [task for task in total_tasks if task in incomplete_set]
+
+            if not total_tasks:
+                self.record.cache.update_problem_status(problem_name, True)
+                logger.info(
+                    "No incomplete jobs for problem '%s'; marking complete.",
+                    problem_name,
+                )
+                continue
+
+            resumed_any = True
+            delayed_tasks = self.org.delay_secondary_conditions(
+                measurements_df=problem.measurement_files[0],
+                task_list=total_tasks,
+                cell_count=self.cell_count
+            )
+
+            logger.info(
+                "Resuming %d jobs for problem '%s'...",
+                len(total_tasks),
+                problem_name,
+            )
+
+            num_rounds = -(-len(delayed_tasks) // self.size)
+
+            for round_idx in range(num_rounds):
+                tasks = []
+                for _ in range(self.size):
+                    if delayed_tasks:
+                        tasks.append(delayed_tasks.pop(0))
+                    else:
+                        tasks.append(None)
+
+                logger.debug(
+                    "Tasks for round %d/%d: %s",
+                    round_idx + 1,
+                    num_rounds,
+                    tasks,
+                )
+
+                worker_args = [
+                    (
+                        task, 
+                        self.record,
+                        resolved_simulator,
+                        worker_args_base,
+                        start,
+                        step
+                    ) 
+                    for task in tasks
+                ]
+
+                with mp.Pool(processes=self.size) as pool:
+                    pool.starmap(worker_method, worker_args)
+
+                self.__update_cache_for_round(tasks)
+                logger.debug("Completed round %d/%d", round_idx + 1, num_rounds)
+
+            self.record.cache.update_problem_status(problem_name, True)
+
+        if not resumed_any:
+            logger.info("No incomplete jobs found. Nothing to resume.")

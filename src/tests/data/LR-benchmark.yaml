@@ -10,4 +10,15 @@ problems:
     - observables.tsv
     sbml_files:
     - LR-model.xml
+    cell_count: 1
+
+  - name: 'test-benchmark-2'
+    condition_files:
+    - conditions.tsv
+    measurement_files:
+    - measurements.tsv
+    observable_files:
+    - observables.tsv
+    sbml_files:
+    - LR-model.xml
     cell_count: 3

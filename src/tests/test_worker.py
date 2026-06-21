@@ -1,17 +1,10 @@
-import os
-import sys
-from multiprocessing import Manager
+import pytest
 from unittest.mock import patch, MagicMock
 
 import pandas as pd
 
-sys.path.append(os.path.dirname(__file__))
-from src.benchtop._worker import Worker
+from benchtop._worker import Worker
 
-cache_dir = "./tests/data/.cache/"
-if not os.path.exists(cache_dir) or len(os.listdir(cache_dir)) < 13:
-    from test_benchtop import test_run
-    test_run()
 
 def make_dummy_worker():
     """Creates a worker instance with minimal mocks required for testing"""
@@ -98,7 +91,7 @@ def test_find_preequilibration_results() -> None:
 
     # Apply mocks
     with patch.object(grunt.record, "results_lookup", fake_results_lookup):
-        results = grunt._Worker__extract_preequilibration_results(cond_id, cell_num)
+        results = grunt._extract_preequilibration_results(cond_id, cell_num)
 
     assert isinstance(results, dict)
     assert list(results.values()) == [2.0, 4.0]
@@ -108,7 +101,7 @@ def test_find_preequilibration_results_no_match() -> None:
     grunt, dummy_simulator = make_dummy_worker()
 
     with patch.object(grunt.record, "results_lookup", lambda *_: None):
-        results = grunt._Worker__extract_preequilibration_results("heterogenize", 1)
+        results = grunt._extract_preequilibration_results("heterogenize", 1)
     assert results == {}, "Should return empty list when no valid preequilibration condition."
 
 def test_setModelState_basic():
@@ -125,7 +118,7 @@ def test_setModelState_basic():
 
     # Run the private method directly
     try:
-        grunt._Worker__setModelState(names, states)
+        grunt._set_model_state(names, states)
     except ValueError as e:
         pass
 
@@ -155,7 +148,7 @@ def test_get_simulation_time():
         index=["conditionId", "conditionName", "good_var1", "good_var2"]
     )
 
-    time = grunt._Worker__get_simulation_time(series)
+    time = grunt._get_simulation_time(series)
 
     assert time == 48, (
         f"Expected time returned 48, got {time}"
@@ -174,7 +167,7 @@ def test_model_state_assignment():
     model_states = list(range(1, 11))  # new values, all nonzero
 
     # --- Action ---
-    grunt._Worker__setModelState(model_names, model_states)
+    grunt._set_model_state(model_names, model_states)
 
     # --- Assert ---
     # ensure modify() called once per variable

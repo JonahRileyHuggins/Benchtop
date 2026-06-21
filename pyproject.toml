@@ -27,6 +27,9 @@ dependencies = [
 amici = [
 	"amici==0.32.0"
 ]
+dev = [
+	"pytest>=8.0",
+]
 
 [project.scripts]
 benchtop = "benchtop.launcher:main"
@@ -37,3 +40,9 @@ package-dir = {"" = "src"}
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.pytest.ini_options]
+testpaths = ["src/tests"]
+pythonpath = ["src"]
+filterwarnings = [
+	"ignore::DeprecationWarning",
+]

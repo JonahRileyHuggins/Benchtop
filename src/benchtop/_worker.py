@@ -167,13 +167,14 @@ class Worker:
         cell = parcel["cell"]
         results = parcel["results"]
 
-        for key in self.record.cache.results_dict:
-            entry = self.record.cache.results_dict[key]
-            if (
-                str(entry["conditionId"]) == str(condition_id)
-                and str(entry["cell"]) == str(cell)
-            ):
-                self.record.cache.save(key=key, df=results)
+        key = self.record.find_job_key(condition_id, cell)
+        if key is None:
+            raise KeyError(
+                f"No cache entry for {condition_id}+{cell} "
+                f"(problem={self.record.current_problem_name})"
+            )
+
+        self.record.cache.save(key=key, df=results)
 
     def _package_results(
         self, results: pd.DataFrame, condition_id: str, cell: str

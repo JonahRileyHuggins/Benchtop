@@ -16,6 +16,7 @@ import pandas as pd
 from benchtop._record import Record
 
 problem = SimpleNamespace()
+problem.name = "test-problem"
 problem.cell_count= 3
 problem.condition_files = [pd.DataFrame({
         "conditionId": ["heterogenize", "primary-condition"],
@@ -48,7 +49,7 @@ def make_dummy_record() -> Record:
 
     # Create record
     dummy_record = Record(
-        problem=problem,
+        problems=problem,
         cache_dir=cache_dir,
         load_index=False
     )
@@ -58,9 +59,11 @@ def make_dummy_record() -> Record:
 
     # Pick one valid key from the auto-generated results_dict
 
-    return_key = [key for key in dummy_record.cache.results_dict.keys()\
-                  if dummy_record.cache.results_dict[key]["conditionId"] == "primary-condition"\
-                    and dummy_record.cache.results_dict[key]["cell"]== 2][0]
+    return_key = [
+        key for key in dummy_record.cache.job_keys()
+        if dummy_record.cache.results_dict[key]["conditionId"] == "primary-condition"
+        and dummy_record.cache.results_dict[key]["cell"] == 2
+    ][0]
 
     # Save the dataframe into the cache so a pickle file is actually written
     dummy_record.cache.save(return_key, df)
@@ -76,16 +79,17 @@ def test_record_constructor() -> None:
         "Record.results_dict must be a dictionary"
 
     # There are 2 conditions × 3 cells = 6 entries expected
-    assert len(rec.cache.results_dict) == 6, \
+    assert len(rec.cache.job_keys()) == 6, \
         "Record should create one entry per (condition × cell)"
 
     # --- Check each entry structure ---
-    for identifier, entry in rec.cache.results_dict.items():
+    for identifier in rec.cache.job_keys():
+        entry = rec.cache.results_dict[identifier]
         assert "conditionId" in entry
         assert "cell" in entry
         assert "complete" in entry
+        assert "problem" in entry
 
-        # Identifiers should be UUIDs because measurement_df has no datasetId
         try:
             uuid.UUID(identifier)
         except ValueError:
@@ -108,8 +112,9 @@ def test_results_lookup() -> None:
 
     # Grab the identifier that matches this pair
     matching_keys = [
-        key for key, entry in rec.cache.results_dict.items()
-        if entry["conditionId"] == target_condition and entry["cell"] == target_cell
+        key for key in rec.cache.job_keys()
+        if rec.cache.results_dict[key]["conditionId"] == target_condition
+        and rec.cache.results_dict[key]["cell"] == target_cell
     ]
     assert len(matching_keys) == 1, \
         "Expected one match for condition/cell pair"

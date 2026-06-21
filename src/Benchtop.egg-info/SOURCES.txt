@@ -19,6 +19,7 @@ src/benchtop/experiment.py
 src/benchtop/file_loader.py
 src/benchtop/launcher.py
 src/benchtop/registry.py
+src/tests/conftest.py
 src/tests/make_dummy.py
 src/tests/run_tests.py
 src/tests/test_benchtop.py

@@ -25,8 +25,9 @@ class FileLoader:
         param_fp = os.path.join(yaml_dir, self.config.parameter_file)
         self.parameter_file = pd.read_csv(param_fp, sep="\t")
 
-        for problem in self.config.problems:
+        for index, problem in enumerate(self.config.problems):
             p = SimpleNamespace()
+            p.name = getattr(problem, "name", None) or f"problem_{index + 1}"
             p.cell_count = problem.cell_count
 
             for attr in (

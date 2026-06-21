@@ -6,6 +6,7 @@ import pandas as pd
 def dummy_simulator(*args, **kwargs) -> None:
 
     results_df = pd.DataFrame({
+    "time": [0.0, 1.0, 2.0],
     "cyt_prot__LIGAND_": [random.uniform(0,1000) for _ in range(3)],
     "nuc_gene_a__LIGAND_": [random.uniform(0,1000) for _ in range(3)],
     "nuc_gene_i__LIGAND_": [random.uniform(0,1000) for _ in range(3)],

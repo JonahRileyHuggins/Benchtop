@@ -12,10 +12,17 @@ class ObservableCalculator:
     """Downsample trajectories, evaluate formulas, pair with experimental data."""
 
     def __init__(self, parent):
-        self.results_dict = parent.record.cache.results_dict
+        self.parent = parent
+        self.problem_name = parent.record.current_problem_name
+        self.results_dict = {
+            key: entry
+            for key, entry in parent.record.cache.results_dict.items()
+            if key != parent.record.cache.PROBLEMS_META_KEY
+            and entry.get("problem") == self.problem_name
+        }
         self.cache = parent.record.cache
-        self.observable_df = parent.loader.problems[0].observable_files[0]
-        self.measurement_df = parent.loader.problems[0].measurement_files[0]
+        self.observable_df = parent.record.problem.observable_files[0]
+        self.measurement_df = parent.record.problem.measurement_files[0]
         self.data_groups = self._group_conditions_and_observables()
         self.observable_results = self._build_observable_results_dict()
 
@@ -28,6 +35,7 @@ class ObservableCalculator:
     def _build_observable_results_dict(self) -> dict:
         return {
             entry: {
+                "problem": self.problem_name,
                 "conditionId": self.results_dict[entry]["conditionId"],
                 "cell": self.results_dict[entry]["cell"],
             }
@@ -35,7 +43,7 @@ class ObservableCalculator:
         }
 
     def run(self) -> dict:
-        """Compute observables for every cached simulation entry."""
+        """Compute observables for every cached simulation entry in the current problem."""
         for entry in self.results_dict:
             condition_id = self.results_dict[entry]["conditionId"]
             matched_formulas = self._get_entry_formulas(condition_id)

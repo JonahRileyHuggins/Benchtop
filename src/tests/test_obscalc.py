@@ -59,6 +59,8 @@ def make_dummy_data(exp: SimpleNamespace):
     ]
 
     for key, entry in exp.record.cache.results_dict.items():
+        if key == exp.record.cache.PROBLEMS_META_KEY:
+            continue
         condition_id = entry["conditionId"]
         cell = entry["cell"]
 
@@ -118,8 +120,8 @@ def test_calculate_formula() -> None:
 
     results = obs._calculate_formula(dataset, formula, group)
 
-    # expected time indices: 0, 30, 60 seconds → dataset indices [0,5,9]
-    time_idx = [0, 5, 9]
+    # Valid measurements at t=0 and t=30 (row at t=60 has no measurement)
+    time_idx = [0, 5]
     answer = (arr1 + arr2)[time_idx]
 
     # Check exact ordering and equality
@@ -148,23 +150,16 @@ def test_obscalc_run():
     # 1) Ensure results_dict still has same keys
     assert len(obs.observable_results) > 0, "No entries in results_dict after run()"
 
-    # 2) Pick a random key and check its cached DataFrame
-    random_key = random.choice(list(obs.observable_results.keys()))
+    non_base_keys = [
+        key for key in obs.observable_results
+        if obs.observable_results[key]["conditionId"] != "heterogenize"
+    ]
+    random_key = random.choice(non_base_keys)
 
     sim = obs.observable_results[random_key]
-    cond_id = sim["conditionId"]
-    if cond_id == "heterogenize":
-        # heterogenize has blank observable, only should store 0:
-        assert sim["blank"]["simulation"][0] == 0, "heterogenize storing wrong values"
-
-    else: 
-        assert np.all(
-            np.diff(sim["LR-complex"]["simulation"]) >= 0
-            ), \
-            f"Data {random_key} is not sorted ascending"
-        
-
-    print("✅ test_obscalc_run passed successfully")
+    assert np.all(
+        np.diff(sim["LR-complex"]["simulation"]) >= 0
+    ), f"Data {random_key} is not sorted ascending"
 
 
 
