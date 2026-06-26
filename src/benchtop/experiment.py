@@ -84,6 +84,7 @@ class Experiment:
             load_index=load_index
             )
 
+        self.load_index = load_index
         self.name = os.path.splitext(os.path.basename(self.petab_yaml))[0]
         self.cell_count = self.loader.problems[0].cell_count
 
@@ -105,6 +106,14 @@ class Experiment:
         """
 
         resolved_simulator = self._resolve_simulator(simulator)
+
+        if self.load_index:
+            return self.resume(
+                resolved_simulator,
+                *args,
+                start=start,
+                step=step,
+            )
 
         for problem_index, config_problem in enumerate(self.details.problems):
             problem = self.loader.problems[problem_index]
@@ -162,8 +171,7 @@ class Experiment:
                             
                 self.__update_cache_for_round(tasks)
 
-            self.record.cache.update_problem_status(problem_name, True)
-            logger.info("Problem '%s' complete.", problem_name)
+            self._finalize_problem(problem_name)
 
     def _resolve_simulator(
         self, simulator: str | AbstractSimulator
@@ -285,7 +293,6 @@ class Experiment:
         
         resolved_simulator = self._resolve_simulator(simulator)
         worker_args_base = self.__add_sbml_to_args(args)
-        cache_index = self.record.cache.read_cache_index()
         resumed_any = False
 
         for problem_index, problem in enumerate(self.loader.problems):
@@ -299,12 +306,7 @@ class Experiment:
             self.cell_count = problem.cell_count
             self.record.set_current_problem(problem, problem_name)
 
-            incomplete = [
-                f"{cache_index[key]['conditionId']}+{cache_index[key]['cell']}"
-                for key in self.record.cache.job_keys()
-                if cache_index[key].get("problem") == problem_name
-                and not cache_index[key]["complete"]
-            ]
+            incomplete = self.record.incomplete_tasks_for_problem(problem_name)
 
             topo_sorted = self.org.topologic_sort(
                 measurements_df=problem.measurement_files[0]
@@ -374,7 +376,18 @@ class Experiment:
                 self.__update_cache_for_round(tasks)
                 logger.debug("Completed round %d/%d", round_idx + 1, num_rounds)
 
-            self.record.cache.update_problem_status(problem_name, True)
+            self._finalize_problem(problem_name)
 
         if not resumed_any:
             logger.info("No incomplete jobs found. Nothing to resume.")
+
+    def _finalize_problem(self, problem_name: str) -> None:
+        """Mark a problem complete once all of its jobs are finished."""
+        remaining = self.record.incomplete_tasks_for_problem(problem_name)
+        if remaining:
+            raise RuntimeError(
+                f"Problem '{problem_name}' still has incomplete jobs: {remaining}"
+            )
+
+        self.record.cache.update_problem_status(problem_name, True)
+        logger.info("Problem '%s' complete.", problem_name)

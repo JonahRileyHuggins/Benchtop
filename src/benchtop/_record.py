@@ -45,6 +45,11 @@ class Record:
             problem_names=[p.name for p in self.problems],
         )
 
+        if load_index:
+            merged = self._merge_loaded_index(self.cache.results_dict)
+            self.cache.results_dict = merged
+            self.cache._write_cache_index()
+
     def set_current_problem(
         self, problem: SimpleNamespace, problem_name: str | None = None
     ) -> None:
@@ -54,6 +59,11 @@ class Record:
 
     def _results_dictionary(self) -> dict:
         """Build initial index: one entry per problem × condition × cell replicate."""
+        jobs = self._expected_jobs()
+        return {key: entry for key, entry in jobs.items()}
+
+    def _expected_jobs(self) -> dict:
+        """Return job entries keyed by stable cache identifiers."""
         results = {}
 
         for problem in self.problems:
@@ -79,6 +89,66 @@ class Record:
                     }
 
         return results
+
+    def _job_lookup_key(self, entry: dict) -> tuple:
+        return (
+            entry.get("problem"),
+            str(entry["conditionId"]),
+            str(entry["cell"]),
+        )
+
+    def _merge_loaded_index(self, loaded: dict) -> dict:
+        """Align a loaded cache index with the current benchmark configuration."""
+        expected_jobs = self._expected_jobs()
+        problem_names = [p.name for p in self.problems]
+
+        meta = loaded.get(ResultCache.PROBLEMS_META_KEY, {})
+        for name in problem_names:
+            meta.setdefault(name, {"complete": False})
+
+        loaded_by_job = {}
+        for key in loaded:
+            if key == ResultCache.PROBLEMS_META_KEY:
+                continue
+            entry = loaded[key]
+            loaded_by_job[self._job_lookup_key(entry)] = (key, entry)
+
+        merged = {ResultCache.PROBLEMS_META_KEY: meta}
+        used_keys = set()
+
+        for _, expected_entry in expected_jobs.items():
+            job_key = self._job_lookup_key(expected_entry)
+            if job_key in loaded_by_job:
+                cache_key, loaded_entry = loaded_by_job[job_key]
+                merged[cache_key] = loaded_entry
+                used_keys.add(cache_key)
+            else:
+                identifier = self._identifier_generator()
+                merged[identifier] = expected_entry
+
+        for job_key, (cache_key, loaded_entry) in loaded_by_job.items():
+            if cache_key not in used_keys:
+                merged[cache_key] = loaded_entry
+
+        return merged
+
+    def incomplete_tasks_for_problem(self, problem_name: str) -> list[str]:
+        """Return ``conditionId+cell`` task strings not yet marked complete."""
+        incomplete = []
+        for key in self.cache.job_keys():
+            entry = self.cache.results_dict[key]
+            if not self._job_belongs_to_problem(entry, problem_name):
+                continue
+            if not entry["complete"]:
+                incomplete.append(f"{entry['conditionId']}+{entry['cell']}")
+        return incomplete
+
+    @staticmethod
+    def _job_belongs_to_problem(entry: dict, problem_name: str) -> bool:
+        entry_problem = entry.get("problem")
+        if entry_problem is None:
+            return True
+        return entry_problem == problem_name
 
     def find_job_key(
         self, condition_id: str, cell: int, problem_name: str | None = None

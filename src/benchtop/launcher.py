@@ -73,3 +73,7 @@ def _get_list_of_experiments(directory: str) -> List[str]:
             if file.endswith((".yaml", ".yml")):
                 yaml_files.append(os.path.join(root, file))
     return yaml_files
+
+
+if __name__ == "__main__":
+    main()

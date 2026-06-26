@@ -73,7 +73,7 @@ def parse_args():
     )
     exp_group.add_argument(
         "--load_index",
-        type=bool,
+        action="store_true",
         default=False,
         help="Resume from an existing cache index.",
     )

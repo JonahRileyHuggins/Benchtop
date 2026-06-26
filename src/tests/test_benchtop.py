@@ -1,5 +1,4 @@
 import json
-import random
 from pathlib import Path
 
 import pandas as pd
@@ -8,14 +7,6 @@ import pytest
 from benchtop.experiment import Experiment
 from benchtop._worker import Worker
 from make_dummy import dummy_simulator
-
-try:
-    from wrappers.tellurium_wrapper import WrapTellurium
-    HAS_TELLURIUM = True
-except ImportError:
-    HAS_TELLURIUM = False
-
-tellurium = pytest.mark.skipif(not HAS_TELLURIUM, reason="tellurium not installed")
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
 BENCHMARK_YAML = DATA_DIR / "LR-benchmark.yaml"
@@ -62,8 +53,7 @@ def test_run_all_problems(fresh_cache, benchmark_yaml):
     assert problems_meta["test-benchmark-2"]["complete"] is True
 
 
-@tellurium
-def test_reassigning_all_species(fresh_cache, benchmark_yaml):
+def test_reassigning_all_species(fresh_cache, benchmark_yaml, tellurium_simulator, tellurium_args):
     experiment = Experiment(
         str(benchmark_yaml),
         cache_dir=fresh_cache,
@@ -74,13 +64,13 @@ def test_reassigning_all_species(fresh_cache, benchmark_yaml):
     grunt = Worker(
         task=None,
         record=experiment.record,
-        simulator=WrapTellurium,
-        args=(str(SBML_PATH),),
+        simulator=tellurium_simulator,
+        args=tellurium_args,
         start=0.0,
         step=30.0,
     )
 
-    grunt.simulator = WrapTellurium(str(SBML_PATH))
+    grunt.simulator = tellurium_simulator(tellurium_args)
 
     species_ids = grunt.simulator.tool.getFloatingSpeciesIds()
     assert len(species_ids) == 9
@@ -92,8 +82,7 @@ def test_reassigning_all_species(fresh_cache, benchmark_yaml):
         assert grunt.simulator.tool[sid] == 0.0
 
 
-@tellurium
-def test_param_reassignment(fresh_cache, benchmark_yaml):
+def test_param_reassignment(fresh_cache, benchmark_yaml, tellurium_simulator, tellurium_args):
     experiment = Experiment(
         str(benchmark_yaml),
         cache_dir=fresh_cache,
@@ -104,13 +93,13 @@ def test_param_reassignment(fresh_cache, benchmark_yaml):
     grunt = Worker(
         task=None,
         record=experiment.record,
-        simulator=WrapTellurium,
-        args=(str(SBML_PATH),),
+        simulator=tellurium_simulator,
+        args=tellurium_args,
         start=0.0,
         step=30.0,
     )
 
-    grunt.simulator = WrapTellurium(str(SBML_PATH))
+    grunt.simulator = tellurium_simulator(tellurium_args)
 
     param_ids = grunt.simulator.tool.getGlobalParameterIds()
     assert len(param_ids) == 15
@@ -120,6 +109,23 @@ def test_param_reassignment(fresh_cache, benchmark_yaml):
 
     for sid in param_ids:
         assert grunt.simulator.tool[sid] == 1.0
+
+
+def test_tellurium_experiment_run(fresh_cache, benchmark_yaml, tellurium_simulator):
+    """End-to-end multi-problem run with the tellurium backend."""
+    experiment = Experiment(
+        str(benchmark_yaml),
+        cache_dir=fresh_cache,
+        cores=2,
+        verbose=False,
+    )
+    experiment.run("tellurium")
+
+    for key in experiment.record.cache.job_keys():
+        assert experiment.record.cache.results_dict[key]["complete"] is True
+
+    problems_meta = experiment.record.cache.results_dict["__problems__"]
+    assert all(entry["complete"] for entry in problems_meta.values())
 
 
 def test_results_dict_inheritance(fresh_cache, benchmark_yaml):
