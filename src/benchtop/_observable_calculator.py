@@ -2,6 +2,7 @@
 
 import math
 import re
+import gc
 from typing import List
 
 import numpy as np
@@ -47,7 +48,9 @@ class ObservableCalculator:
         for entry in self.results_dict:
             condition_id = self.results_dict[entry]["conditionId"]
             matched_formulas = self._get_entry_formulas(condition_id)
-            dataset = self.cache.load(entry)
+            needed_columns = self._columns_for_formulas(matched_formulas)
+
+            dataset = self.cache.load_columns(entry, needed_columns)
 
             for observable_key, formula in matched_formulas.items():
                 self.observable_results[entry][observable_key] = {}
@@ -62,8 +65,24 @@ class ObservableCalculator:
                 self.observable_results[entry][observable_key]["time"] = (
                     self._downsample_timepoints(dataset, group)
                 )
-
+            
+            # Dump unnecessary data after calculate
+            del dataset
+            gc.collect()
+        
         return self.observable_results
+
+    def _columns_for_formulas(self, matched_formulas: dict) -> List[str]:
+        species: Set[str] = set()
+        for formula in matched_formulas.values():
+            null_like = {"", None, 0, "0", float("nan"), np.nan, "nan"}
+            if formula in null_like or (
+                isinstance(formula, float) and math.isnan(formula)
+            ):
+                continue
+            species.update(self._get_valid_species(formula))
+
+        return sorted(species | {"time"})
 
     def _get_entry_formulas(self, condition_id: str) -> dict:
         matched_obs_ids = self._get_condition_observables(condition_id)

@@ -20,12 +20,12 @@ import multiprocessing as mp
 
 from benchtop._worker import worker_method
 from benchtop._record import Record
+from benchtop._results_cacher import DEFAULT_CACHE
 from benchtop.registry import load_simulator, SIMULATOR_REGISTRY
 from benchtop._organizer import Organizer
-import benchtop._observable_calculator as obs
+from benchtop._observable_calculator import ObservableCalculator
 from benchtop.file_loader import FileLoader
 from benchtop._abstract_simulator import AbstractSimulator
-
 
 logging.basicConfig(
     level=logging.INFO, # Overriden if Verbose Arg. True
@@ -33,13 +33,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+DEFAULT_CACHE.mkdir(parents=True, exist_ok=True)
 
 class Experiment:
 
     def __init__(self, 
                  petab_yaml: Union[os.PathLike, str], 
                  cores: int = os.cpu_count(),
-                 cache_dir: str = './.cache',
+                 cache_dir: Union[os.PathLike, str] = DEFAULT_CACHE,
                  load_index: bool = False,
                  verbose = False
                  ) -> None:
@@ -266,7 +267,7 @@ class Experiment:
 
         self.record.cache.delete_cache()
 
-    def observable_calculation(self, *args) -> None:
+    def calculate_observables(self, *args) -> None:
         """Calculate observables and compare to experimental data for all problems."""
         combined_results = {}
 
@@ -274,7 +275,7 @@ class Experiment:
             problem_name = problem.name
             self.record.set_current_problem(problem, problem_name)
 
-            problem_results = obs.ObservableCalculator(self).run()
+            problem_results = ObservableCalculator(self).run()
             combined_results[problem_name] = problem_results
 
         self.record.cache.results_dict = combined_results

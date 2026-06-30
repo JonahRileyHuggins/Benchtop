@@ -4,10 +4,12 @@ import json
 import os
 import pickle
 import shutil
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
+DEFAULT_CACHE = Path(Path.home() / ".cache" / "benchtop")
 
 class ResultCache:
     """Store per-simulation DataFrames on disk; track completion in cache_index.json."""
@@ -17,7 +19,7 @@ class ResultCache:
     def __init__(
         self,
         results_dict: Optional[Dict[str, Any]] = None,
-        cache_dir: str = "./.cache",
+        cache_dir: Union[os.PathLike, str] = DEFAULT_CACHE,
         load_index: bool = False,
         problem_names: Optional[List[str]] = None,
     ) -> None:
@@ -114,6 +116,18 @@ class ResultCache:
     def load(self, key: str) -> pd.DataFrame:
         with open(self._key_to_path(key), "rb") as f:
             return pickle.load(f)
+
+    def load_columns(self, key: str, columns: list) -> pd.DataFrame:
+        """Load a trajectory and return only the requested columns."""
+        trajectory = self.load(key)
+        missing = [column for column in columns if column not in trajectory.columns]
+        if missing:
+            raise KeyError(
+                f"Columns {missing} not found in cached trajectory '{key}'."
+            )
+
+        subset = trajectory.loc[:, columns].copy()
+        return subset
 
     def delete_cache(self) -> None:
         shutil.rmtree(self.cache_dir, ignore_errors=False)

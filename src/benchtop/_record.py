@@ -1,5 +1,6 @@
 """Results index: maps condition/cell pairs to cache keys and lookup helpers."""
 
+import os
 import logging
 import uuid
 from types import SimpleNamespace
@@ -7,7 +8,7 @@ from typing import List, Union
 
 import pandas as pd
 
-from benchtop._results_cacher import ResultCache
+from benchtop._results_cacher import ResultCache, DEFAULT_CACHE
 
 logging.basicConfig(
     level=logging.INFO,
@@ -22,7 +23,7 @@ class Record:
     def __init__(
         self,
         problems: Union[List[SimpleNamespace], SimpleNamespace],
-        cache_dir: str = "./.cache",
+        cache_dir: Union[os.PathLike, str] = DEFAULT_CACHE,
         load_index: bool = False,
     ) -> None:
         if isinstance(problems, list):

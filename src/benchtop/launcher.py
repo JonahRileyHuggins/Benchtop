@@ -61,7 +61,7 @@ def _run_experiment(args: SimpleNamespace, config_path: str) -> None:
     if args.No_Observables:
         logger.debug("Skipping observable calculation.")
     else:
-        experiment.observable_calculation(args)
+        experiment.calculate_observables(args)
         logger.debug("Observable calculation complete.")
 
 
