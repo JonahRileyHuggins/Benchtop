@@ -3,6 +3,8 @@
 import argparse
 import os
 
+from benchtop._results_cacher import DEFAULT_CACHE
+
 ASCII_HEADER = r"""
         .   °                .......                                     °   
        | .° |                :.   .:                                   (  .° )

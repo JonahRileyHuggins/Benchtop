@@ -4,7 +4,7 @@ Version: 0.1.0
 Summary: A tool for running simulation experiments formated as PEtab Problems.
 Author-email: Jonah Huggins <JonahRileyHuggins@gmail.com>, Marc Birtwistle <marc.birtwistle@gmail.com>
 License: GPL-2.0
-Requires-Python: >=3.12
+Requires-Python: >=3.11
 Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: numpy==2.2.4

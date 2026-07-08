@@ -5,7 +5,7 @@ import os
 import pickle
 import shutil
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
 
