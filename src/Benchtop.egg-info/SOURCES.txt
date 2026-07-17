@@ -33,5 +33,6 @@ src/tests/data/plot-model.py
 src/wrappers/SingleCell.py
 src/wrappers/amici_wrapper.py
 src/wrappers/bngsim_wrapper.py
+src/wrappers/rover_wrapper.py
 src/wrappers/sparced_wrapper.py
 src/wrappers/tellurium_wrapper.py

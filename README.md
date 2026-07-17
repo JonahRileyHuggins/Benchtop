@@ -59,7 +59,12 @@ flowchart LR
 
 ## Installation
 
-From the repository root:
+Benchtop is registered on PyPI and pip installable:
+```bash
+pip install benchtop
+```
+
+To build from source,navigate to the repository root:
 
 ```bash
 pip install -e .
