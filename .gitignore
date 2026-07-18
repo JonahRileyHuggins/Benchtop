@@ -11,3 +11,12 @@ __pycache__/
 
 */.cache/*
 cache*.json
+
+# Packaging / install artifacts (do not commit)
+build/
+dist/
+*.egg-info/
+src/*.egg-info/
+
+# Sphinx
+docs/_build/

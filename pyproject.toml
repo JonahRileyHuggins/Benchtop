@@ -30,6 +30,11 @@ amici = [
 dev = [
 	"pytest>=8.0",
 ]
+docs = [
+	"sphinx>=7.0",
+	"myst-parser>=2.0",
+	"sphinx-rtd-theme>=2.0",
+]
 
 [project.scripts]
 benchtop = "benchtop.launcher:main"

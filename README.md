@@ -22,6 +22,16 @@
 
 Benchtop runs simulation benchmarks defined in a [PEtab](https://petab.readthedocs.io/)-inspired format. Given a YAML configuration and companion TSV/SBML files, it schedules conditions in dependency order, simulates across multiple CPU cores, caches intermediate results, and computes observables for model–data comparison.
 
+## Documentation
+
+Sphinx docs live in [`docs/`](docs/). Build locally after `pip install -e ".[docs]"`:
+
+```bash
+python -m sphinx -b html docs docs/_build/html
+```
+
+Then open `docs/_build/html/index.html`. Once the GitHub repository is connected on [Read the Docs](https://readthedocs.org/), builds use [`.readthedocs.yaml`](.readthedocs.yaml).
+
 ## Features
 
 - **PEtab-style benchmarks** — Define experiments with YAML plus standard TSV files for conditions, measurements, observables, and parameters.
@@ -119,7 +129,7 @@ experiment = Experiment(
 )
 
 experiment.run("tellurium")
-experiment.observable_calculation()
+experiment.calculate_observables()
 ```
 
 You can also pass a custom simulator class that extends `AbstractSimulator` instead of a registry name.
