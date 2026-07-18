@@ -24,13 +24,13 @@ Benchtop runs simulation benchmarks defined in a [PEtab](https://petab.readthedo
 
 ## Documentation
 
-Sphinx docs live in [`docs/`](docs/). Build locally after `pip install -e ".[docs]"`:
+Full documentation: [https://benchtop.readthedocs.io/en/latest/](https://benchtop.readthedocs.io/en/latest/)
+
+Sphinx sources live in [`docs/`](docs/). To build locally after `pip install -e ".[docs]"`:
 
 ```bash
 python -m sphinx -b html docs docs/_build/html
 ```
-
-Then open `docs/_build/html/index.html`. Once the GitHub repository is connected on [Read the Docs](https://readthedocs.org/), builds use [`.readthedocs.yaml`](.readthedocs.yaml).
 
 ## Features
 
