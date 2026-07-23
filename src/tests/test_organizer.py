@@ -3,8 +3,7 @@ import sys
 
 import pandas as pd
 
-sys.path.append(f"{os.path.dirname(__file__)}/../")
-from src.benchtop._organizer import Organizer
+from benchtop._organizer import Organizer
 
 def test_organizer_constructor() -> None:
 
