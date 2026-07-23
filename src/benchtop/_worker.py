@@ -3,6 +3,7 @@
 import gc
 import logging
 import multiprocessing as mp
+import os
 
 import pandas as pd
 
@@ -76,6 +77,11 @@ class Worker:
         self._set_model_state(condition.keys(), condition.values.tolist())
 
         stop_time = self._get_simulation_time(condition)
+        key = self.record.find_job_key(condition_id, cell)
+        if hasattr(self.simulator, "results_path") and key is not None:
+            self.simulator.results_path = os.path.join(
+                self.record.cache.cache_dir, "out", f"{key}.npy"
+            )
         results_array = self.simulator.simulate(start, stop_time, step)
         results = pd.DataFrame(results_array)
 

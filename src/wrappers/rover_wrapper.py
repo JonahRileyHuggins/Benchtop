@@ -39,6 +39,7 @@ class RoverSimulator(AbstractSimulator):
         deterministic_sbml = paths[0]
         stochastic_sbml = paths[1]
         coupling_dt = float(kwargs.get("dt", kwargs.get("coupling_dt", 30.0)))
+        self.results_path = None
         bngsim_kwargs = kwargs.get("bngsim_kwargs", {"codegen": True})
 
         logger.debug(
@@ -61,7 +62,7 @@ class RoverSimulator(AbstractSimulator):
         dt = float(step)
 
         logger.debug("Rover simulate t_span=(%s, %s) dt=%s", t0, t1, dt)
-        self.tool.run(t_span=(t0, t1), dt=dt)
+        self.tool.run(t_span=(t0, t1), dt=dt, results_path=self.results_path)
         return self.tool.to_dataframe()
 
     def modify(self, component: str, value: int | float) -> None:
