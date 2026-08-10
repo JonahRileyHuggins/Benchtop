@@ -27,7 +27,7 @@ If no valid subcommand is given, Benchtop prints a short help hint. Use `benchto
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `-s`, `--simulator` | `tellurium` | Backend name: `tellurium`, `amici`, `bngsim`, `rover` |
+| `-s`, `--simulator` | unset | Force one backend for all problems (`tellurium`, `amici`, `bngsim`, `rover`). Overrides per-problem YAML `simulator`; if omitted, each problem uses its YAML value or `tellurium`. |
 | `-c`, `--cores` | CPU count | Number of parallel worker processes |
 | `--cache_dir` | `./.cache` | Directory for trajectory cache and index |
 | `--load_index` | off | Resume incomplete jobs from an existing cache index |
@@ -66,3 +66,5 @@ benchtop experiment -p path/to/benchmark.yaml --load_index --cache_dir ./.cache
 - Missing `-p` without `--run_all` raises an assertion error asking for a YAML path.
 - Unknown simulator names fail inside `Experiment.run` with the list of registered backends.
 - Optional backends that are not installed fail at import with a `pip install benchtop[<name>]` hint.
+
+Simulator selection precedence: explicit `-s` / `Experiment.run(simulator=...)` overrides all problems; otherwise each problem’s YAML `simulator` is used; otherwise `tellurium`.

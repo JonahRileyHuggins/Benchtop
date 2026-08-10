@@ -88,9 +88,10 @@ class Experiment:
         self.load_index = load_index
         self.name = os.path.splitext(os.path.basename(self.petab_yaml))[0]
         self.cell_count = self.loader.problems[0].cell_count
+        self.default_simulator = "tellurium"
 
     def run(self,
-            simulator: str | AbstractSimulator,
+            simulator: str | AbstractSimulator = None,
             *args, 
             start: float = 0.0,
             step: float = 30.0,
@@ -100,17 +101,16 @@ class Experiment:
         ----------
         simulator : AbstractSimulator
             child class of abstract AbstractSimulator Class, defined as a
-            wrapper for a particular simulator
+            wrapper for a particular simulator. When provided, overrides
+            per-problem YAML ``simulator`` for all problems.
 
         args : tuple, optional
             Extra arguments to pass to function.
         """
 
-        resolved_simulator = self._resolve_simulator(simulator)
-
         if self.load_index:
             return self.resume(
-                resolved_simulator,
+                simulator,
                 *args,
                 start=start,
                 step=step,
@@ -127,6 +127,8 @@ class Experiment:
             self.name = problem_name
             self.cell_count = problem.cell_count
             self.record.set_current_problem(problem, problem_name)
+            resolved_simulator = self._simulator_for_problem(problem, simulator)
+            worker_args_base = self.__add_sbml_to_args(args, problem)
 
             logger.info(
                 "Running problem '%s' (%d/%d) from %s",
@@ -140,8 +142,6 @@ class Experiment:
                 self.name,
                 self.size,
             )
-
-            worker_args_base = self.__add_sbml_to_args(args)
 
             num_rounds, job_index = self.org.task_organization(
                 problem.measurement_files[0],
@@ -173,6 +173,18 @@ class Experiment:
                 self.__update_cache_for_round(tasks)
 
             self._finalize_problem(problem_name)
+
+    def _simulator_for_problem(
+        self,
+        problem,
+        override: str | AbstractSimulator | None,
+    ) -> AbstractSimulator:
+        """Resolve simulator: explicit override > problem YAML > default."""
+        if override is not None:
+            return self._resolve_simulator(override)
+
+        name = getattr(problem, "simulator", None) or self.default_simulator
+        return self._resolve_simulator(name)
 
     def _resolve_simulator(
         self, simulator: str | AbstractSimulator
@@ -215,15 +227,18 @@ class Experiment:
 
         assert remaining == [], f"Error in simulation task updates: {remaining}"
 
-    def __add_sbml_to_args(self, args: tuple) -> tuple:
-        """Adds sbml files stored in self to args tuple"""
+    def __add_sbml_to_args(self, args: tuple, problem=None) -> tuple:
+        """Adds this problem's SBML paths to args (or all paths if no problem)."""
         if not args:
             from types import SimpleNamespace
             args_nsp = SimpleNamespace()
         else:
             args_nsp = args[0]
 
-        args_nsp.model_paths = self.sbml_list
+        if problem is not None and hasattr(problem, "sbml_files"):
+            args_nsp.model_paths = list(problem.sbml_files)
+        else:
+            args_nsp.model_paths = self.sbml_list
         return args_nsp
 
     def __sbml_getter(self) -> list:
@@ -285,15 +300,12 @@ class Experiment:
 
     def resume(
         self,
-        simulator: str | AbstractSimulator,
+        simulator: str | AbstractSimulator = None,
         *args, 
         start: float = 0.0,
         step: float = 30.0,
     ) -> None:
         """Starts Experiment from last completed simulation setting"""
-        
-        resolved_simulator = self._resolve_simulator(simulator)
-        worker_args_base = self.__add_sbml_to_args(args)
         resumed_any = False
 
         for problem_index, problem in enumerate(self.loader.problems):
@@ -306,6 +318,8 @@ class Experiment:
             self.name = problem_name
             self.cell_count = problem.cell_count
             self.record.set_current_problem(problem, problem_name)
+            resolved_simulator = self._simulator_for_problem(problem, simulator)
+            worker_args_base = self.__add_sbml_to_args(args, problem)
 
             incomplete = self.record.incomplete_tasks_for_problem(problem_name)
 

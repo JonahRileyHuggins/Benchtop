@@ -58,8 +58,11 @@ def parse_args():
     exp_group.add_argument(
         "--simulator", "-s",
         type=str,
-        default="tellurium",
-        help="Simulation backend (tellurium, amici, bngsim).",
+        default=None,
+        help=(
+            "Simulation backend for all problems (tellurium, amici, bngsim, rover). "
+            "Overrides per-problem YAML simulator; default uses YAML or tellurium."
+        ),
     )
     exp_group.add_argument(
         "--cores", "-c",

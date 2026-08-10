@@ -6,7 +6,7 @@ The repository ships a small PEtab-style example under `src/tests/data/`:
 
 | File | Role |
 |------|------|
-| `LR-benchmark.yaml` | Problem list, `cell_count`, paths to TSV/SBML |
+| `LR-benchmark.yaml` | Problem list, `cell_count`, optional `simulator`, paths to TSV/SBML |
 | `conditions.tsv` | Condition IDs and parameter/species overrides |
 | `measurements.tsv` | Observable ↔ condition links, times, optional preequilibration |
 | `observables.tsv` | `observableId` and `observableFormula` |
@@ -29,9 +29,10 @@ problems:
     sbml_files:
       - LR-model.xml
     cell_count: 1
+    simulator: bngsim
 ```
 
-`cell_count` is a Benchtop extension: number of replicate simulations per condition (useful for stochastic models).
+`cell_count` is a Benchtop extension: number of replicate simulations per condition (useful for stochastic models). Optional `simulator` selects the backend for that problem (`tellurium`, `amici`, `bngsim`, `rover`). An explicit CLI `-s` / `Experiment.run(simulator=...)` overrides every problem’s YAML value; if neither is set, Benchtop uses `tellurium`.
 
 ### Command line
 

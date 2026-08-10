@@ -5,6 +5,7 @@ import pandas as pd
 import pytest
 
 from benchtop.experiment import Experiment
+from benchtop.file_loader import FileLoader
 from benchtop._worker import Worker
 from make_dummy import dummy_simulator
 
@@ -14,6 +15,56 @@ SBML_PATH = DATA_DIR / "LR-model.xml"
 
 # 3 conditions × (1 cell + 3 cells) across two problems
 EXPECTED_JOB_COUNT = 12
+
+
+def test_file_loader_copies_per_problem_simulator(benchmark_yaml):
+    loader = FileLoader(str(benchmark_yaml))
+    loader._petab_files()
+
+    assert loader.problems[0].simulator == "bngsim"
+    assert loader.problems[1].simulator == "tellurium"
+
+
+def test_per_problem_simulator_from_yaml(fresh_cache, benchmark_yaml, monkeypatch):
+    """With no override, each problem resolves its YAML simulator name."""
+    resolved = []
+
+    def fake_resolve(self, simulator):
+        resolved.append(simulator)
+        return dummy_simulator
+
+    monkeypatch.setattr(Experiment, "_resolve_simulator", fake_resolve)
+
+    experiment = Experiment(
+        str(benchmark_yaml),
+        cache_dir=fresh_cache,
+        cores=2,
+        verbose=False,
+    )
+    experiment.run(None)
+
+    assert resolved == ["bngsim", "tellurium"]
+
+
+def test_explicit_simulator_overrides_yaml(fresh_cache, benchmark_yaml, monkeypatch):
+    """Explicit run(simulator=...) forces one backend for every problem."""
+    resolved = []
+
+    def fake_resolve(self, simulator):
+        resolved.append(simulator)
+        return dummy_simulator
+
+    monkeypatch.setattr(Experiment, "_resolve_simulator", fake_resolve)
+
+    experiment = Experiment(
+        str(benchmark_yaml),
+        cache_dir=fresh_cache,
+        cores=2,
+        verbose=False,
+    )
+    experiment.run("amici")
+
+    assert resolved == ["amici", "amici"]
 
 
 def test_experiment_initializes_all_problem_jobs(fresh_cache, benchmark_yaml):
