@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: Benchtop
-Version: 0.1.1
+Version: 0.1.2
 Summary: A tool for running simulation experiments formated as PEtab Problems.
 Author-email: Jonah Huggins <JonahRileyHuggins@gmail.com>, Marc Birtwistle <marc.birtwistle@gmail.com>
 License: GPL-2.0

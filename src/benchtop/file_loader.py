@@ -29,6 +29,7 @@ class FileLoader:
             p = SimpleNamespace()
             p.name = getattr(problem, "name", None) or f"problem_{index + 1}"
             p.cell_count = problem.cell_count
+            p.simulator = getattr(problem, "simulator", None)
 
             for attr in (
                 "condition_files",

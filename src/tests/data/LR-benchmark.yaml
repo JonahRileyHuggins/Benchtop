@@ -11,6 +11,7 @@ problems:
     sbml_files:
     - LR-model.xml
     cell_count: 1
+    simulator: 'bngsim'
 
   - name: 'test-benchmark-2'
     condition_files:
@@ -22,3 +23,4 @@ problems:
     sbml_files:
     - LR-model.xml
     cell_count: 3
+    simulator: 'tellurium'
