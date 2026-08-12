@@ -129,6 +129,34 @@ class Experiment:
             self.record.set_current_problem(problem, problem_name)
             resolved_simulator = self._simulator_for_problem(problem, simulator)
             worker_args_base = self.__add_sbml_to_args(args, problem)
+            # #region agent log
+            try:
+                import json as _json, time as _time
+                _dbg = (
+                    "/mnt/c/Users/jhugg/Documents/Benchtop/debug-0b1aa4.log"
+                    if os.path.exists("/mnt/c/Users/jhugg/Documents/Benchtop")
+                    else r"C:\Users\jhugg\Documents\Benchtop\debug-0b1aa4.log"
+                )
+                with open(_dbg, "a", encoding="utf-8") as _f:
+                    _f.write(_json.dumps({
+                        "sessionId": "0b1aa4",
+                        "runId": "pre-fix",
+                        "hypothesisId": "H2-H5",
+                        "location": "experiment.py:run:before_pool",
+                        "message": "about to run problem pool",
+                        "data": {
+                            "problem": problem_name,
+                            "sim": getattr(resolved_simulator, "__name__", str(resolved_simulator)),
+                            "model_paths": [
+                                os.path.basename(p)
+                                for p in getattr(worker_args_base, "model_paths", [])
+                            ],
+                        },
+                        "timestamp": int(_time.time() * 1000),
+                    }) + "\n")
+            except Exception:
+                pass
+            # #endregion
 
             logger.info(
                 "Running problem '%s' (%d/%d) from %s",
@@ -181,10 +209,43 @@ class Experiment:
     ) -> AbstractSimulator:
         """Resolve simulator: explicit override > problem YAML > default."""
         if override is not None:
-            return self._resolve_simulator(override)
-
-        name = getattr(problem, "simulator", None) or self.default_simulator
-        return self._resolve_simulator(name)
+            chosen = override
+            branch = "override"
+            resolved = self._resolve_simulator(override)
+        else:
+            chosen = getattr(problem, "simulator", None) or self.default_simulator
+            branch = "yaml" if getattr(problem, "simulator", None) else "default"
+            resolved = self._resolve_simulator(chosen)
+        # #region agent log
+        try:
+            import json as _json, time as _time
+            _dbg = (
+                "/mnt/c/Users/jhugg/Documents/Benchtop/debug-0b1aa4.log"
+                if os.path.exists("/mnt/c/Users/jhugg/Documents/Benchtop")
+                else r"C:\Users\jhugg\Documents\Benchtop\debug-0b1aa4.log"
+            )
+            with open(_dbg, "a", encoding="utf-8") as _f:
+                _f.write(_json.dumps({
+                    "sessionId": "0b1aa4",
+                    "runId": "post-fix",
+                    "hypothesisId": "H1-H2",
+                    "location": "experiment.py:_simulator_for_problem",
+                    "message": "resolved simulator for problem",
+                    "data": {
+                        "problem": getattr(problem, "name", None),
+                        "branch": branch,
+                        "override": repr(override)[:120] if override is not None else None,
+                        "problem_simulator": getattr(problem, "simulator", None),
+                        "chosen": chosen if isinstance(chosen, str) else getattr(chosen, "__name__", str(chosen)),
+                        "resolved_name": getattr(resolved, "__name__", type(resolved).__name__),
+                        "n_sbml": len(getattr(problem, "sbml_files", []) or []),
+                    },
+                    "timestamp": int(_time.time() * 1000),
+                }) + "\n")
+        except Exception:
+            pass
+        # #endregion
+        return resolved
 
     def _resolve_simulator(
         self, simulator: str | AbstractSimulator

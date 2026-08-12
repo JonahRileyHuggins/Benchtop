@@ -29,7 +29,35 @@ class FileLoader:
             p = SimpleNamespace()
             p.name = getattr(problem, "name", None) or f"problem_{index + 1}"
             p.cell_count = problem.cell_count
-            p.simulator = getattr(problem, "simulator", None)
+            p.simulator = getattr(problem, "simulator", None) or getattr(
+                problem, "solver", None
+            )
+            # #region agent log
+            try:
+                import json as _json, time as _time
+                _dbg = (
+                    "/mnt/c/Users/jhugg/Documents/Benchtop/debug-0b1aa4.log"
+                    if os.path.exists("/mnt/c/Users/jhugg/Documents/Benchtop")
+                    else r"C:\Users\jhugg\Documents\Benchtop\debug-0b1aa4.log"
+                )
+                with open(_dbg, "a", encoding="utf-8") as _f:
+                    _f.write(_json.dumps({
+                        "sessionId": "0b1aa4",
+                        "runId": "post-fix",
+                        "hypothesisId": "H1",
+                        "location": "file_loader.py:_petab_files",
+                        "message": "loaded problem simulator fields",
+                        "data": {
+                            "name": p.name,
+                            "simulator": p.simulator,
+                            "solver": getattr(problem, "solver", None),
+                            "raw_keys": list(problem.keys()) if hasattr(problem, "keys") else None,
+                        },
+                        "timestamp": int(_time.time() * 1000),
+                    }) + "\n")
+            except Exception:
+                pass
+            # #endregion
 
             for attr in (
                 "condition_files",

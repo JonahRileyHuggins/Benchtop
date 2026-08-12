@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "Benchtop"
-version = "0.1.2.1"
+version = "0.1.2.2"
 description = "A tool for running simulation experiments formated as PEtab Problems."
 readme = "README.md"
 requires-python = ">=3.11"

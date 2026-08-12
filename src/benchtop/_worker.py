@@ -26,7 +26,89 @@ def worker_method(
     step: float = 30.0,
 ) -> None:
     """Entry point for multiprocessing.Pool; constructs Worker in the child process."""
-    Worker(task, record, simulator, args, start, step)
+    # #region agent log
+    try:
+        import json as _json, time as _time
+        _dbg = (
+            "/mnt/c/Users/jhugg/Documents/Benchtop/debug-0b1aa4.log"
+            if os.path.exists("/mnt/c/Users/jhugg/Documents/Benchtop")
+            else r"C:\Users\jhugg\Documents\Benchtop\debug-0b1aa4.log"
+        )
+        with open(_dbg, "a", encoding="utf-8") as _f:
+            _f.write(_json.dumps({
+                "sessionId": "0b1aa4",
+                "runId": "pre-fix",
+                "hypothesisId": "H2-H4",
+                "location": "worker.py:worker_method:entry",
+                "message": "worker starting",
+                "data": {
+                    "task": task,
+                    "sim_class": getattr(simulator, "__name__", type(simulator).__name__),
+                    "model_paths": [
+                        os.path.basename(p)
+                        for p in (getattr(args, "model_paths", None) or [])
+                    ],
+                    "problem": getattr(getattr(record, "problem", None), "name", None),
+                    "pid": os.getpid(),
+                },
+                "timestamp": int(_time.time() * 1000),
+            }) + "\n")
+    except Exception:
+        pass
+    # #endregion
+    try:
+        Worker(task, record, simulator, args, start, step)
+        # #region agent log
+        try:
+            import json as _json, time as _time
+            _dbg = (
+                "/mnt/c/Users/jhugg/Documents/Benchtop/debug-0b1aa4.log"
+                if os.path.exists("/mnt/c/Users/jhugg/Documents/Benchtop")
+                else r"C:\Users\jhugg\Documents\Benchtop\debug-0b1aa4.log"
+            )
+            with open(_dbg, "a", encoding="utf-8") as _f:
+                _f.write(_json.dumps({
+                    "sessionId": "0b1aa4",
+                    "runId": "pre-fix",
+                    "hypothesisId": "H3-H4",
+                    "location": "worker.py:worker_method:exit",
+                    "message": "worker finished ok",
+                    "data": {"task": task, "pid": os.getpid()},
+                    "timestamp": int(_time.time() * 1000),
+                }) + "\n")
+        except Exception:
+            pass
+        # #endregion
+    except Exception as e:
+        # #region agent log
+        try:
+            import json as _json, time as _time, traceback as _tb
+            _dbg = (
+                "/mnt/c/Users/jhugg/Documents/Benchtop/debug-0b1aa4.log"
+                if os.path.exists("/mnt/c/Users/jhugg/Documents/Benchtop")
+                else r"C:\Users\jhugg\Documents\Benchtop\debug-0b1aa4.log"
+            )
+            with open(_dbg, "a", encoding="utf-8") as _f:
+                _f.write(_json.dumps({
+                    "sessionId": "0b1aa4",
+                    "runId": "pre-fix",
+                    "hypothesisId": "H2-H4-H5",
+                    "location": "worker.py:worker_method:error",
+                    "message": "worker raised",
+                    "data": {
+                        "task": task,
+                        "error_type": type(e).__name__,
+                        "error": str(e)[:500],
+                        "sim_class": getattr(simulator, "__name__", type(simulator).__name__),
+                        "traceback": _tb.format_exc()[-800:],
+                        "pid": os.getpid(),
+                    },
+                    "timestamp": int(_time.time() * 1000),
+                }) + "\n")
+        except Exception:
+            pass
+        # #endregion
+        raise
 
 
 class Worker:
