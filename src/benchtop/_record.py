@@ -25,6 +25,7 @@ class Record:
         problems: Union[List[SimpleNamespace], SimpleNamespace],
         cache_dir: Union[os.PathLike, str] = DEFAULT_CACHE,
         load_index: bool = False,
+        no_confirm: bool = False
     ) -> None:
         if isinstance(problems, list):
             self.problems = problems
@@ -44,6 +45,7 @@ class Record:
             cache_dir=cache_dir,
             load_index=load_index,
             problem_names=[p.name for p in self.problems],
+            no_confirm=no_confirm
         )
 
         if load_index:

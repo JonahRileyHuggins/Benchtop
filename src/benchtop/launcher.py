@@ -53,6 +53,7 @@ def _run_experiment(args: SimpleNamespace, config_path: str) -> None:
         cache_dir=args.cache_dir,
         load_index=args.load_index,
         verbose=args.verbose,
+        no_confirm=args.no_confirm
     )
 
     experiment.run(args.simulator, args)
