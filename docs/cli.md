@@ -31,6 +31,7 @@ If no valid subcommand is given, Benchtop prints a short help hint. Use `benchto
 | `-c`, `--cores` | CPU count | Number of parallel worker processes |
 | `--cache_dir` | `./.cache` | Directory for trajectory cache and index |
 | `--load_index` | off | Resume incomplete jobs from an existing cache index |
+| `--no_confirm` | off | Overwrite an existing cache directory without erroring. Unused when `--load_index` is set. |
 | `--No_Observables` | off | Skip `calculate_observables` after simulation |
 | `--catchall KEY=VALUE` | — | Extra key=value pairs forwarded into the experiment args namespace |
 | `--run_all DIR` | — | Recursively run every `.yaml` / `.yml` under `DIR` |

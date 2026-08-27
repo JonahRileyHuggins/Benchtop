@@ -20,10 +20,25 @@ def test_cache_constructor(fresh_cache, benchmark_yaml):
         cache_dir=fresh_cache,
         cores=2,
         verbose=False,
+        no_confirm=True,
     )
 
     loaded_keys = set(experiment.record.cache.job_keys())
     assert not loaded_keys.intersection({"id1", "id2", "id3"})
+
+
+def test_existing_cache_requires_no_confirm(fresh_cache, benchmark_yaml):
+    """An existing cache index is not overwritten unless no_confirm=True."""
+    with open(Path(fresh_cache) / "cache_index.json", "w") as f:
+        json.dump({"id1": {}}, f, indent=2)
+
+    with pytest.raises(FileExistsError, match="Cache index already exists"):
+        Experiment(
+            str(benchmark_yaml),
+            cache_dir=fresh_cache,
+            cores=2,
+            verbose=False,
+        )
 
 
 def test_load_prior_merges_with_config(fresh_cache, benchmark_yaml):

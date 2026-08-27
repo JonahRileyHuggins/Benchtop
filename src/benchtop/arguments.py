@@ -3,8 +3,6 @@
 import argparse
 import os
 
-from benchtop._results_cacher import DEFAULT_CACHE
-
 ASCII_HEADER = r"""
         .   °                .......                                     °   
        | .° |                :.   .:                                   (  .° )
@@ -97,6 +95,11 @@ def parse_args():
         "--run_all",
         default=None,
         help="Run all benchmarks in the given directory.",
+    )
+    exp_group.add_argument(
+        "--no_confirm",
+        action="store_true",
+        help="Overwrite an existing cache directory without erroring. Unused when --load_index is set.",
     )
 
     return parser.parse_args()

@@ -113,6 +113,7 @@ Useful flags:
 | `-c`, `--cores` | Number of parallel processes (default: CPU count) |
 | `--cache_dir` | Directory for simulation cache (default: `./.cache`) |
 | `--load_index` | Resume from an existing cache index |
+| `--no_confirm` | Overwrite an existing cache directory without erroring |
 | `--No_Observables` | Skip observable calculation after simulation |
 | `-v`, `--verbose` | Enable debug logging |
 

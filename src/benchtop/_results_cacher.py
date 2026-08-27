@@ -22,9 +22,13 @@ class ResultCache:
         cache_dir: Union[os.PathLike, str] = DEFAULT_CACHE,
         load_index: bool = False,
         problem_names: Optional[List[str]] = None,
+        no_confirm: bool = False
     ) -> None:
         self.cache_dir = os.path.abspath(cache_dir)
         self.cache_index_path = os.path.join(self.cache_dir, "cache_index.json")
+
+        if not load_index and not no_confirm:
+            self._double_check_cache_index()
 
         if not load_index:
             if results_dict is None:
@@ -135,3 +139,12 @@ class ResultCache:
     def read_cache_index(self) -> Dict[str, Any]:
         with open(self.cache_index_path) as f:
             return json.load(f)
+
+    def _double_check_cache_index(self) -> None:
+        """Raise if a cache index already exists so a new run cannot wipe it by accident."""
+        if os.path.exists(self.cache_index_path):
+            raise FileExistsError(
+                f"Cache index already exists at {self.cache_index_path}: "
+                "use --no_confirm (or no_confirm=True) to overwrite it, "
+                "or --load_index (or load_index=True) to resume from it."
+            )
