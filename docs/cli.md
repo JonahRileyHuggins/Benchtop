@@ -3,7 +3,7 @@
 Benchtop installs a console script named `benchtop`. The primary subcommand is `experiment`.
 
 ```bash
-benchtop experiment -p path/to/benchmark.yaml -s tellurium -c 4
+benchtop experiment -p path/to/benchmark.yaml -s bngsim -c 4
 ```
 
 ## Usage
@@ -27,7 +27,7 @@ If no valid subcommand is given, Benchtop prints a short help hint. Use `benchto
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `-s`, `--simulator` | unset | Force one backend for all problems (`tellurium`, `amici`, `bngsim`, `rover`). Overrides per-problem YAML `simulator`; if omitted, each problem uses its YAML value or `tellurium`. |
+| `-s`, `--simulator` | unset | Force one backend for all problems (`tellurium`, `amici`, `bngsim`, `rover`). Overrides per-problem YAML `simulator`; if omitted, each problem uses its YAML value or `bngsim`. |
 | `-c`, `--cores` | CPU count | Number of parallel worker processes |
 | `--cache_dir` | `./.cache` | Directory for trajectory cache and index |
 | `--load_index` | off | Resume incomplete jobs from an existing cache index |
@@ -41,13 +41,13 @@ If no valid subcommand is given, Benchtop prints a short help hint. Use `benchto
 Single benchmark:
 
 ```bash
-benchtop experiment -p src/tests/data/LR-benchmark.yaml -s tellurium -c 4
+benchtop experiment -p src/tests/data/LR-benchmark.yaml -s bngsim -c 4
 ```
 
 All YAML files under a directory:
 
 ```bash
-benchtop experiment --run_all path/to/benchmarks/ -s tellurium
+benchtop experiment --run_all path/to/benchmarks/ -s bngsim
 ```
 
 Simulate only (no observable pickle):
@@ -68,4 +68,4 @@ benchtop experiment -p path/to/benchmark.yaml --load_index --cache_dir ./.cache
 - Unknown simulator names fail inside `Experiment.run` with the list of registered backends.
 - Optional backends that are not installed fail at import with a `pip install benchtop[<name>]` hint.
 
-Simulator selection precedence: explicit `-s` / `Experiment.run(simulator=...)` overrides all problems; otherwise each problem’s YAML `simulator` is used; otherwise `tellurium`.
+Simulator selection precedence: explicit `-s` / `Experiment.run(simulator=...)` overrides all problems; otherwise each problem’s YAML `simulator` is used; otherwise `bngsim`.
