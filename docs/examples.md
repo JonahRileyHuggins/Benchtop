@@ -32,14 +32,14 @@ problems:
     simulator: bngsim
 ```
 
-`cell_count` is a Benchtop extension: number of replicate simulations per condition (useful for stochastic models). Optional `simulator` selects the backend for that problem (`tellurium`, `amici`, `bngsim`, `rover`). An explicit CLI `-s` / `Experiment.run(simulator=...)` overrides every problem’s YAML value; if neither is set, Benchtop uses `tellurium`.
+`cell_count` is a Benchtop extension: number of replicate simulations per condition (useful for stochastic models). Optional `simulator` selects the backend for that problem (`bngsim`, `amici`, `tellurium`, `rover`). An explicit CLI `-s` / `Experiment.run(simulator=...)` overrides every problem’s YAML value; if neither is set, Benchtop uses `bngsim`.
 
 ### Command line
 
 From the repository root (with Benchtop installed):
 
 ```bash
-benchtop experiment -p src/tests/data/LR-benchmark.yaml -s tellurium -c 4
+benchtop experiment -p src/tests/data/LR-benchmark.yaml -s bngsim -c 4
 ```
 
 Results land in `src/tests/data/results/LR-benchmark.pkl` by default. Cache files go to `./.cache` unless you pass `--cache_dir`.
@@ -50,7 +50,7 @@ Results land in `src/tests/data/results/LR-benchmark.pkl` by default. Cache file
 from benchtop import Experiment
 
 experiment = Experiment("src/tests/data/LR-benchmark.yaml", cores=4)
-experiment.run("tellurium")
+experiment.run("bngsim")
 experiment.calculate_observables()
 ```
 
