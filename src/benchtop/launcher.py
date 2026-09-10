@@ -7,7 +7,7 @@ from typing import List
 from types import SimpleNamespace
 
 from benchtop.arguments import parse_args
-from benchtop.experiment import Experiment
+from benchtop.design import print_design
 
 logging.basicConfig(
     level=logging.INFO,
@@ -21,8 +21,17 @@ def main():
 
     if args.command == "experiment":
         launch_experiment(args)
+    elif args.command == "design":
+        launch_design(args)
     else:
         print("No valid command provided. Use --help for guidance.")
+
+
+def launch_design(args: SimpleNamespace) -> None:
+    assert args.path is not None, "Provide a PEtab YAML path (-p)."
+    if not os.path.exists(args.path):
+        raise FileNotFoundError(f"Experiment not found: {args.path}")
+    print_design(args.path, verbose=getattr(args, "verbose", False))
 
 
 def launch_experiment(args: SimpleNamespace) -> None:
@@ -42,6 +51,8 @@ def _run_all(args: SimpleNamespace) -> None:
 
 
 def _run_experiment(args: SimpleNamespace, config_path: str) -> None:
+    from benchtop.experiment import Experiment
+
     assert os.path.exists(config_path), f"Experiment not found: {config_path}"
 
     if args.verbose:
