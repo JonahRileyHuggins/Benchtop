@@ -1,8 +1,11 @@
 import os
 import sys
 import uuid
-import shutil
+from pathlib import Path
 from types import SimpleNamespace
+
+import pandas as pd
+
 sys.path.append(os.path.dirname(__file__))
 sys.path.append(
     os.path.join(
@@ -11,7 +14,6 @@ sys.path.append(
         "benchtop"
     )
 )
-import pandas as pd
 
 from benchtop._record import Record
 
@@ -38,26 +40,17 @@ problem.measurement_files = [pd.DataFrame({
     })]
 
 
-def make_dummy_record() -> Record:
-    cache_dir = "./.cache"
+def make_dummy_record(cache_dir: str) -> Record:
+    os.makedirs(cache_dir, exist_ok=True)
 
-    try: 
-        os.makedirs(cache_dir, exist_ok=False)
-    except OSError as e:
-        shutil.rmtree(cache_dir)
-        os.makedirs(cache_dir, exist_ok=False)
-
-    # Create record
     dummy_record = Record(
         problems=problem,
         cache_dir=cache_dir,
-        load_index=False
+        load_index=False,
+        no_confirm=True,
     )
 
-    # Create a simple DataFrame to cache
     df = pd.DataFrame({"x": [1, 2, 3], "y": [10, 20, 30]})
-
-    # Pick one valid key from the auto-generated results_dict
 
     return_key = [
         key for key in dummy_record.cache.job_keys()
@@ -65,24 +58,21 @@ def make_dummy_record() -> Record:
         and dummy_record.cache.results_dict[key]["cell"] == 2
     ][0]
 
-    # Save the dataframe into the cache so a pickle file is actually written
     dummy_record.cache.save(return_key, df)
 
     return dummy_record
 
-def test_record_constructor() -> None:
+def test_record_constructor(tmp_path) -> None:
     """Verify Record builds a correct results dictionary and cache."""
-    rec = make_dummy_record()
+    cache_dir = str(tmp_path / ".cache")
+    rec = make_dummy_record(cache_dir)
 
-    # --- Check for dict structure ---
     assert isinstance(rec.cache.results_dict, dict), \
         "Record.results_dict must be a dictionary"
 
-    # There are 2 conditions × 3 cells = 6 entries expected
     assert len(rec.cache.job_keys()) == 6, \
         "Record should create one entry per (condition × cell)"
 
-    # --- Check each entry structure ---
     for identifier in rec.cache.job_keys():
         entry = rec.cache.results_dict[identifier]
         assert "conditionId" in entry
@@ -95,22 +85,17 @@ def test_record_constructor() -> None:
         except ValueError:
             raise AssertionError(f"Identifier {identifier} is not a valid UUID")
 
-    # --- Cache directory exists ---
-    assert os.path.exists("./.cache"), \
+    assert os.path.exists(cache_dir), \
         "Cache directory should exist after constructing a Record"
 
-    print("✅ test_record_constructor passed")
 
-
-def test_results_lookup() -> None:
+def test_results_lookup(tmp_path) -> None:
     """Test loading back the result entry associated with a condition+cell."""
-    rec = make_dummy_record()
+    rec = make_dummy_record(str(tmp_path / ".cache"))
 
-    # Pick one known condition/cell pair
     target_condition = "primary-condition"
     target_cell = 2
 
-    # Grab the identifier that matches this pair
     matching_keys = [
         key for key in rec.cache.job_keys()
         if rec.cache.results_dict[key]["conditionId"] == target_condition
@@ -121,14 +106,13 @@ def test_results_lookup() -> None:
 
     identifier = matching_keys[0]
 
-    # The cache stores a DataFrame, but empty for now --> load() returns a pandas dataframe
     result = rec.cache.load(identifier)
     assert isinstance(result, pd.DataFrame), \
         "Record.load should return a pandas DataFrame for empty entries"
 
-    print("✅ test_results_lookup passed")
 
 if __name__ == "__main__":
+    import tempfile
 
-    test_record_constructor()
-    test_results_lookup()
+    test_record_constructor(Path(tempfile.mkdtemp()))
+    test_results_lookup(Path(tempfile.mkdtemp()))
