@@ -67,16 +67,16 @@ experiment = Experiment(
     verbose=True,
 )
 
-experiment.run("tellurium")
+experiment.run("bngsim")
 experiment.calculate_observables()
 ```
 
 Pass a wrapper class instead of a registry name:
 
 ```python
-from wrappers.tellurium_wrapper import TelluriumSimulator
+from wrappers.bngsim_wrapper import BNGSimSimulator
 
-experiment.run(TelluriumSimulator)
+experiment.run(BNGSimSimulator)
 ```
 
 ## Simulator registry
@@ -85,9 +85,10 @@ Registered backends (see `benchtop.registry.SIMULATOR_REGISTRY`):
 
 | Name | Wrapper |
 |------|---------|
-| `tellurium` | `TelluriumSimulator` (default dependency) |
+| `bngsim` | `BNGSimSimulator` (default dependency) |
 | `amici` | `AmiciSimulator` (optional `.[amici]`) |
 | `bngsim` | `BNGSimSimulator` |
+| `tellurium` | `TelluriumSimulator` |
 | `rover` | `RoverSimulator` (hybrid; needs two SBML partitions) |
 
 Unknown names raise `ValueError` listing available keys. Missing optional packages raise `ImportError` with an install hint.

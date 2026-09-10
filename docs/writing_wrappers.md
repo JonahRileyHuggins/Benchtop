@@ -95,9 +95,9 @@ If the engine needs optional dependencies, document an extras install (e.g. `pip
 
 | File | Notes |
 |------|--------|
-| `wrappers/tellurium_wrapper.py` | Default; single SBML; `self.tool[component] = value` |
-| `wrappers/bngsim_wrapper.py` | Branches param vs species; explicit `time` column |
+| `wrappers/bngsim_wrapper.py` | Default; branches param vs species; explicit `time` column |
 | `wrappers/amici_wrapper.py` | Compiled AMICI module path handling |
+| `wrappers/tellurium_wrapper.py` | Single SBML; `self.tool[component] = value` |
 | `wrappers/rover_wrapper.py` | Two SBML paths; hybrid ODE + tau-leap |
 
 ## Observables vs wrappers
