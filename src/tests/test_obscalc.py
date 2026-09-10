@@ -1,7 +1,7 @@
 import os
 import sys
-import shutil
 import random
+import tempfile
 from types import SimpleNamespace
 
 import pandas as pd
@@ -23,23 +23,20 @@ from benchtop.file_loader import FileLoader
 from benchtop._record import Record
 from benchtop._observable_calculator import ObservableCalculator
 
-def dummy_experiment() -> SimpleNamespace:
+def dummy_experiment(cache_dir: str) -> SimpleNamespace:
     """Observable_calculator uses composition, requiring experiment class object"""
-    # Clean up remaining data to avoid errrors.
-    cache_dir = "./.cache"
-
-    try: 
-        os.makedirs(cache_dir, exist_ok=False)
-    except OSError as e:
-        shutil.rmtree(cache_dir)
-        os.makedirs(cache_dir, exist_ok=False)
+    os.makedirs(cache_dir, exist_ok=True)
 
     data_path = os.path.join(os.path.dirname(__file__), "data", "LR-benchmark.yaml")
 
     exp = SimpleNamespace()
     exp.loader = FileLoader(data_path)
     exp.loader._petab_files()
-    exp.record = Record(exp.loader.problems[0])
+    exp.record = Record(
+        exp.loader.problems[0],
+        cache_dir=cache_dir,
+        no_confirm=True,
+    )
 
     return exp
 
@@ -78,10 +75,10 @@ def make_dummy_data(exp: SimpleNamespace):
         # Save to cache
         exp.record.cache.save(key, dummy_df)
 
-def test_obscalc_constructor():
+def test_obscalc_constructor(tmp_path):
     """Ensure constructor completes with validated test benchmark."""
 
-    exp = dummy_experiment()
+    exp = dummy_experiment(str(tmp_path / ".cache"))
 
     try:
         obs = ObservableCalculator(exp)
@@ -94,10 +91,10 @@ def test_obscalc_constructor():
         "Constructor did not return an ObservableCalculator instance"
 
 
-def test_calculate_formula() -> None:
+def test_calculate_formula(tmp_path) -> None:
     """Test method for calculating a specific formula."""
 
-    exp = dummy_experiment()
+    exp = dummy_experiment(str(tmp_path / ".cache"))
 
     arr1 = np.arange(1, 11)
     arr2 = np.arange(1, 11)
@@ -132,11 +129,11 @@ def test_calculate_formula() -> None:
     )
     print("✅ test_calculate_formula passed")
 
-def test_obscalc_run():
+def test_obscalc_run(tmp_path):
     """Unit test for ObservableCalculator.run() with deterministic data."""
 
     # Prepare experiment and deterministic cache data
-    exp = dummy_experiment()
+    exp = dummy_experiment(str(tmp_path / ".cache"))
     make_dummy_data(exp)
 
     # Create ObservableCalculator instance
@@ -167,8 +164,8 @@ def test_obscalc_run():
 
 
 if __name__ == "__main__":
+    from pathlib import Path
 
-    test_calculate_formula()
-    test_obscalc_run()
+    test_calculate_formula(Path(tempfile.mkdtemp()))
+    test_obscalc_run(Path(tempfile.mkdtemp()))
 
-    shutil.rmtree(".cache")

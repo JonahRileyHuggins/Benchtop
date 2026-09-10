@@ -162,7 +162,7 @@ problems:
 
 | File | Purpose |
 |------|---------|
-| **Parameter TSV** | Model parameters (`parameterId`, `parameterScale`, `nominalValue`, …) |
+| **Parameter.tsv** | Model parameters (`parameterId`, `parameterScale`, `nominalValue`, …) |
 | **conditions.tsv** | Simulation conditions — maps `conditionId` to parameter overrides |
 | **measurements.tsv** | Links observables to conditions, optional preequilibration, and measurement timepoints |
 | **observables.tsv** | Observable definitions (`observableId`, `observableFormula`, `noiseFormula`) |
@@ -202,6 +202,7 @@ Benchtop/
 │   │   ├── _results_cacher.py     # Pickle cache and index
 │   │   ├── _observable_calculator.py
 │   │   ├── _abstract_simulator.py # Simulator interface
+|   |   ├── design.py              # Creates visual of simulation experiment
 │   │   ├── file_loader.py         # YAML and TSV loading
 │   │   ├── registry.py            # Simulator lookup
 │   │   ├── launcher.py            # CLI entry point

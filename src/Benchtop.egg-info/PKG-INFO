@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: Benchtop
-Version: 0.1.2.2
+Version: 0.1.4.1
 Summary: A tool for running simulation experiments formated as PEtab Problems.
 Author-email: Jonah Huggins <JonahRileyHuggins@gmail.com>, Marc Birtwistle <marc.birtwistle@gmail.com>
 License: GPL-2.0
@@ -138,6 +138,7 @@ Useful flags:
 | `-c`, `--cores` | Number of parallel processes (default: CPU count) |
 | `--cache_dir` | Directory for simulation cache (default: `./.cache`) |
 | `--load_index` | Resume from an existing cache index |
+| `--no_confirm` | Overwrite an existing cache directory without erroring |
 | `--No_Observables` | Skip observable calculation after simulation |
 | `-v`, `--verbose` | Enable debug logging |
 
@@ -186,7 +187,7 @@ problems:
 
 | File | Purpose |
 |------|---------|
-| **Parameter TSV** | Model parameters (`parameterId`, `parameterScale`, `nominalValue`, …) |
+| **Parameter.tsv** | Model parameters (`parameterId`, `parameterScale`, `nominalValue`, …) |
 | **conditions.tsv** | Simulation conditions — maps `conditionId` to parameter overrides |
 | **measurements.tsv** | Links observables to conditions, optional preequilibration, and measurement timepoints |
 | **observables.tsv** | Observable definitions (`observableId`, `observableFormula`, `noiseFormula`) |
@@ -226,6 +227,7 @@ Benchtop/
 │   │   ├── _results_cacher.py     # Pickle cache and index
 │   │   ├── _observable_calculator.py
 │   │   ├── _abstract_simulator.py # Simulator interface
+|   |   ├── design.py              # Creates visual of simulation experiment
 │   │   ├── file_loader.py         # YAML and TSV loading
 │   │   ├── registry.py            # Simulator lookup
 │   │   ├── launcher.py            # CLI entry point

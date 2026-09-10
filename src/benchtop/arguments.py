@@ -51,6 +51,11 @@ def parse_args():
         parents=[shared_parser],
         help="Run PEtab-style simulation experiments",
     )
+    subparsers.add_parser(
+        "design",
+        parents=[shared_parser],
+        help="Print an ASCII preview of the experiment design (does not simulate)",
+    )
     exp_group = experiment_parser.add_argument_group("Experiment Options")
 
     exp_group.add_argument(

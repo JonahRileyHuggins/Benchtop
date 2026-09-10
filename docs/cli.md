@@ -1,6 +1,11 @@
 # Command-line interface
 
-Benchtop installs a console script named `benchtop`. The primary subcommand is `experiment`.
+Benchtop installs a console script named `benchtop`. Subcommands:
+
+| Command | Purpose |
+|---------|---------|
+| `experiment` | Run simulations for a benchmark YAML |
+| `design` | Print an ASCII preview of the experiment (does **not** simulate) |
 
 ```bash
 benchtop experiment -p path/to/benchmark.yaml -s bngsim -c 4
@@ -10,16 +15,17 @@ benchtop experiment -p path/to/benchmark.yaml -s bngsim -c 4
 
 ```text
 benchtop experiment [options]
+benchtop design -p path/to/benchmark.yaml
 ```
 
-If no valid subcommand is given, Benchtop prints a short help hint. Use `benchtop experiment --help` for the full flag list.
+If no valid subcommand is given, Benchtop prints a short help hint. Use `benchtop experiment --help` or `benchtop design --help` for the full flag list.
 
 ## Global options
 
 | Flag | Description |
 |------|-------------|
-| `-v`, `--verbose` | Enable debug logging |
-| `-p`, `--path` | Path to a single benchmark YAML (required unless `--run_all`) |
+| `-v`, `--verbose` | Enable debug logging. For `design`, also print condition override tables. |
+| `-p`, `--path` | Path to a single benchmark YAML (required for `design`; required for `experiment` unless `--run_all`) |
 | `-n`, `--name` | Descriptive name for the run (reserved for tooling) |
 | `-o`, `--output` | Output directory for the results pickle (default: `results/` next to the YAML) |
 
@@ -35,6 +41,15 @@ If no valid subcommand is given, Benchtop prints a short help hint. Use `benchto
 | `--No_Observables` | off | Skip `calculate_observables` after simulation |
 | `--catchall KEY=VALUE` | — | Extra key=value pairs forwarded into the experiment args namespace |
 | `--run_all DIR` | — | Recursively run every `.yaml` / `.yml` under `DIR` |
+
+## Design preview
+
+`benchtop design` loads the YAML and PEtab TSVs, then prints the condition graph (preequilibration edges, observables, times, and `cell_count` replicates). It does not construct an experiment, create a cache, or run any simulator.
+
+```bash
+benchtop design -p src/tests/data/LR-benchmark.yaml
+benchtop design -p path/to/benchmark.yaml -v
+```
 
 ## Examples
 
@@ -65,6 +80,7 @@ benchtop experiment -p path/to/benchmark.yaml --load_index --cache_dir ./.cache
 ## Exit behavior
 
 - Missing `-p` without `--run_all` raises an assertion error asking for a YAML path.
+- `benchtop design` without `-p` raises the same class of error; a missing YAML path raises `FileNotFoundError`. Neither case starts a simulation.
 - Unknown simulator names fail inside `Experiment.run` with the list of registered backends.
 - Optional backends that are not installed fail at import with a `pip install benchtop[<name>]` hint.
 
