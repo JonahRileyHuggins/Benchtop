@@ -20,7 +20,7 @@ Benchtop runs in-silico benchmarks defined with a YAML configuration and compani
 - **Preequilibration** — Topological sort so preequilibration conditions run before dependents.
 - **Single-cell replication** — Multiple stochastic replicates per condition via `cell_count`.
 - **Result caching** — Pickle trajectories and a JSON index; resume with `--load_index`.
-- **Pluggable simulators** — Tellurium by default; optional AMICI, BNGSim, Rover, or your own wrapper.
+- **Pluggable simulators** — BNGsim by default; optional AMICI, Tellurium, Rover, or your own wrapper.
 
 ## Installation
 
